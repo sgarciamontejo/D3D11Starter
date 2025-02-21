@@ -15,10 +15,10 @@
 using namespace DirectX;
 
 // --------------------------------------------------------
-// Called once per program, after the window and graphics API
+// The constructor is called after the window and graphics API
 // are initialized but before the game loop begins
 // --------------------------------------------------------
-void Game::Initialize()
+Game::Game()
 {
 	// Helper methods for loading shaders, creating some basic
 	// geometry to draw and some simple camera matrices.
@@ -232,6 +232,7 @@ void Game::CreateGeometry()
 // --------------------------------------------------------
 void Game::OnResize()
 {
+	
 }
 
 

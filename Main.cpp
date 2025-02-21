@@ -11,9 +11,7 @@
 // only accessible in this file
 namespace
 {
-	// A "global" game object that
-	// can be used in WinMain() and
-	// in our window resize callback
+	// The "game" object that drives the application
 	Game* game = 0;
 
 	// A simple function to hook up 
@@ -57,9 +55,6 @@ int WINAPI WinMain(
 	bool statsInTitleBar = true;
 	bool vsync = false;
 
-	// The main application object
-	game = new Game();
-
 	// Create the window and verify
 	HRESULT windowResult = Window::Create(
 		hInstance,
@@ -83,8 +78,8 @@ int WINAPI WinMain(
 	// Initalize the input system, which requires the window handle
 	Input::Initialize(Window::Handle());
 
-	// Now the game itself can be initialzied
-	game->Initialize();
+	// Now the main application object itself can be initialzied
+	game = new Game();
 
 	// Time tracking
 	LARGE_INTEGER perfFreq{};
