@@ -105,21 +105,45 @@ HRESULT Graphics::Initialize(unsigned int windowWidth, unsigned int windowHeight
 	// Result variable for below function calls
 	HRESULT hr = S_OK;
 
-	// Attempt to initialize DirectX
+	// Attempt to initialize Direct3D 11.1
+	D3D_FEATURE_LEVEL level = D3D_FEATURE_LEVEL_11_1;
 	hr = D3D11CreateDeviceAndSwapChain(
 		0,							// Video adapter (physical GPU) to use, or null for default
 		D3D_DRIVER_TYPE_HARDWARE,	// We want to use the hardware (GPU)
 		0,							// Used when doing software rendering
 		deviceFlags,				// Any special options
-		0,							// Optional array of possible versions we want as fallbacks
-		0,							// The number of fallbacks in the above param
+		&level,						// Specifying DirectX 11.1 only
+		1,							// The number of feature levels in the above param
 		D3D11_SDK_VERSION,			// Current version of the SDK
 		&swapDesc,					// Address of swap chain options
 		SwapChain.GetAddressOf(),	// Pointer to our Swap Chain pointer
 		Device.GetAddressOf(),		// Pointer to our Device pointer
 		&featureLevel,				// Retrieve exact API feature level in use
 		Context.GetAddressOf());	// Pointer to our Device Context pointer
-	if (FAILED(hr)) return hr;
+	
+	// Did 11.1 initialization fail?  If so, try 11.0
+	if (hr == E_INVALIDARG)
+	{
+		hr = D3D11CreateDeviceAndSwapChain(
+			0,							// Video adapter (physical GPU) to use, or null for default
+			D3D_DRIVER_TYPE_HARDWARE,	// We want to use the hardware (GPU)
+			0,							// Used when doing software rendering
+			deviceFlags,				// Any special options
+			0,							// Leave out the array of options to use the highest version available
+			0,							// The number of feature levels in the above param
+			D3D11_SDK_VERSION,			// Current version of the SDK
+			&swapDesc,					// Address of swap chain options
+			SwapChain.GetAddressOf(),	// Pointer to our Swap Chain pointer
+			Device.GetAddressOf(),		// Pointer to our Device pointer
+			&featureLevel,				// Retrieve exact API feature level in use
+			Context.GetAddressOf());	// Pointer to our Device Context pointer
+	}
+	
+	// If it's still a failure, we're unable to initialize any version of Direct3D
+	if (FAILED(hr))
+	{
+		return hr;
+	}
 
 	// We're set up
 	apiInitialized = true;
