@@ -106,13 +106,13 @@ HRESULT Graphics::Initialize(unsigned int windowWidth, unsigned int windowHeight
 	HRESULT hr = S_OK;
 
 	// Attempt to initialize Direct3D 11.1
-	D3D_FEATURE_LEVEL level = D3D_FEATURE_LEVEL_11_1;
+	D3D_FEATURE_LEVEL level_11_1 = D3D_FEATURE_LEVEL_11_1;
 	hr = D3D11CreateDeviceAndSwapChain(
 		0,							// Video adapter (physical GPU) to use, or null for default
 		D3D_DRIVER_TYPE_HARDWARE,	// We want to use the hardware (GPU)
 		0,							// Used when doing software rendering
 		deviceFlags,				// Any special options
-		&level,						// Specifying DirectX 11.1 only
+		&level_11_1,				// Specifying DirectX 11.1 only
 		1,							// The number of feature levels in the above param
 		D3D11_SDK_VERSION,			// Current version of the SDK
 		&swapDesc,					// Address of swap chain options
