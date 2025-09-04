@@ -11,8 +11,17 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3dcompiler.h>
 
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_dx11.h"
+#include "ImGui/imgui_impl_win32.h"
+
 // For the DirectX Math library
 using namespace DirectX;
+
+bool activeWindow = true;
+bool noResize = false;
+bool demoOpen = false;
+float demoColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 
 // --------------------------------------------------------
 // The constructor is called after the window and graphics API
@@ -20,6 +29,16 @@ using namespace DirectX;
 // --------------------------------------------------------
 Game::Game()
 {
+	// Initialize ImGui itself & platform/renderer backends
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui_ImplWin32_Init(Window::Handle());
+	ImGui_ImplDX11_Init(Graphics::Device.Get(), Graphics::Context.Get());
+	// Pick a style (uncomment one of these 3)
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsLight();
+	//ImGui::StyleColorsClassic();
+
 	// Helper methods for loading shaders, creating some basic
 	// geometry to draw and some simple camera matrices.
 	//  - You'll be expanding and/or replacing these later
@@ -58,7 +77,10 @@ Game::Game()
 // --------------------------------------------------------
 Game::~Game()
 {
-
+	// ImGui clean up
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 }
 
 
@@ -225,7 +247,6 @@ void Game::CreateGeometry()
 	}
 }
 
-
 // --------------------------------------------------------
 // Handle resizing to match the new window size
 //  - Eventually, we'll want to update our 3D camera
@@ -241,6 +262,11 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
+	UpdateImGui(deltaTime);
+
+	// Make changes to UI with this helper
+	BuildUI();
+
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
@@ -257,8 +283,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - At the beginning of Game::Draw() before drawing *anything*
 	{
 		// Clear the back buffer (erase what's on screen) and depth buffer
-		const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
-		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	color);
+		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	demoColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
@@ -286,6 +311,9 @@ void Game::Draw(float deltaTime, float totalTime)
 			3,     // The number of indices to use (we could draw a subset if we wanted)
 			0,     // Offset to the first index we want to use
 			0);    // Offset to add to each index when looking up vertices
+
+		ImGui::Render(); // Turns this frame’s UI into renderable triangles
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
 	}
 
 	// Frame END
@@ -306,5 +334,67 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 }
 
+void Game::UpdateImGui(float deltaTime) {
+	// Put this all in a helper method that is called from Game::Update()
+	// Feed fresh data to ImGui
+	ImGuiIO& io = ImGui::GetIO();
+	io.DeltaTime = deltaTime;
+	io.DisplaySize.x = (float)Window::Width();
+	io.DisplaySize.y = (float)Window::Height();
+	// Reset the frame
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+	// Determine new input capture
+	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
+	Input::SetMouseCapture(io.WantCaptureMouse);
+	// Show the demo window
+	if (demoOpen) {
+		ImGui::ShowDemoWindow();
+	}
+}
 
+void Game::BuildUI() {
+	ImGuiWindowFlags window_flags = 0;
+	if (noResize) {
+		window_flags |= ImGuiWindowFlags_NoResize;
+	}
 
+	ImGui::Begin("Test Window", &activeWindow, window_flags);
+	if (ImGui::BeginMenuBar())
+	{
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
+			if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */ }
+			if (ImGui::MenuItem("Close", "Ctrl+W")) { /* Do other stuff */ }
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
+	}
+
+	// Replace the %f with the next parameter, and format as a float
+	ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
+	// Replace each %d with the next parameter, and format as decimal integers
+	// The "x" will be printed as-is between the numbers, like so: 800x600
+	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
+
+	ImGui::ColorEdit4("Background Color", &demoColor[0]);
+	
+
+	if (ImGui::Button("Show Demo Window"))
+	{
+		// This will only execute on frames in which the button is clicked
+		demoOpen = !demoOpen;
+	}
+
+	// these are technically 3 elements including the header
+	if (ImGui::CollapsingHeader("Extra Elements", ImGuiTreeNodeFlags_None))
+	{
+		ImGui::SliderFloat("Alpha", &demoColor[3], 0.0f, 1.0f);
+		ImGui::Checkbox("No resizing", &noResize);
+	}
+	
+
+	ImGui::End(); //end window
+}
