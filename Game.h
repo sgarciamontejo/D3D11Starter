@@ -2,6 +2,9 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
+#include <memory>
+#include "Mesh.h"
+#include <vector>
 
 class Game
 {
@@ -18,6 +21,17 @@ public:
 	void OnResize();
 
 private:
+	// GUI Control Variables
+	bool activeWindow = true;
+	bool noResize = false;
+	bool demoOpen = false;
+	float demoColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+
+	// New Geometry
+	std::vector<std::shared_ptr<Mesh>> meshes;
+	std::shared_ptr<Mesh> triangle; 
+	std::shared_ptr<Mesh> rectangle;
+	std::shared_ptr<Mesh> pentagon;
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();
