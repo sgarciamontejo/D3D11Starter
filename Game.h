@@ -4,6 +4,8 @@
 #include <wrl/client.h>
 #include <memory>
 #include "Mesh.h"
+#include "Vertex.h"
+#include "BufferStructs.h"
 #include <vector>
 
 class Game
@@ -26,6 +28,8 @@ private:
 	bool noResize = false;
 	bool demoOpen = false;
 	float demoColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+	float shaderOffset[3];
+	float shaderTint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 	// New Geometry
 	std::vector<std::shared_ptr<Mesh>> meshes;
@@ -50,6 +54,9 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
+
+	// Const Buffers
+	Microsoft::WRL::ComPtr<ID3D11Buffer> constBuffer;
 
 	// Helpers
 	void UpdateImGui(float deltaTime);

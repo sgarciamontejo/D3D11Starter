@@ -1,6 +1,5 @@
 #include "Game.h"
 #include "Graphics.h"
-#include "Vertex.h"
 #include "Input.h"
 #include "Mesh.h"
 #include "PathHelpers.h"
@@ -25,6 +24,17 @@ using namespace DirectX;
 // --------------------------------------------------------
 Game::Game()
 {
+	// Calculate byte width
+	unsigned int size = sizeof(VertexShaderData);
+	size = (size + 15) / 16 * 16;
+	// Constant Buffer
+	D3D11_BUFFER_DESC cbDesc = {};
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.ByteWidth = size;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	Graphics::Device->CreateBuffer(&cbDesc, 0, constBuffer.GetAddressOf());
+
 	// Initialize ImGui itself & platform/renderer backends
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -61,6 +71,9 @@ Game::Game()
 		//    these calls will need to happen multiple times per frame
 		Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
 		Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
+
+		// Set Const Buffer
+		Graphics::Context->VSSetConstantBuffers(0, 1, constBuffer.GetAddressOf());
 	}
 }
 
@@ -267,6 +280,15 @@ void Game::Draw(float deltaTime, float totalTime)
 	{
 		// loop through shared pointers of meshes and draw them
 		for (std::shared_ptr<Mesh> mesh : meshes) {
+			VertexShaderData cbData;
+			cbData.colorTint = XMFLOAT4(shaderTint);
+			cbData.offset = XMFLOAT3(shaderOffset);
+
+			D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+			Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+			memcpy(mappedBuffer.pData, &cbData, sizeof(cbData));
+			Graphics::Context->Unmap(constBuffer.Get(), 0);
+
 			mesh->Draw();
 		}
 
@@ -374,6 +396,8 @@ void Game::BuildUI() {
 		ImGui::TreePop();
 	}
 	
+	ImGui::SliderFloat3("Offset", shaderOffset, -1.0f, 1.0f);
+	ImGui::ColorEdit4("Tint", shaderTint);
 
 	ImGui::End(); //end window
 }
