@@ -35,7 +35,7 @@ struct VertexToPixel
 cbuffer ExternalData : register(b0)
 {
     float4 colorTint;
-    float3 offset;
+    matrix world;
 }
 
 // --------------------------------------------------------
