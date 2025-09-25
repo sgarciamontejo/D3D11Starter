@@ -235,6 +235,25 @@ void Game::CreateGeometry()
 	int numIndices_3 = sizeof(indices_3) / sizeof(indices_3[0]);
 	pentagon = std::make_shared<Mesh>(vertices_3, numVertices_3, indices_3, numIndices_3);
 	meshes.push_back(pentagon);
+
+	std::shared_ptr<GameEntity> e1 = std::make_shared<GameEntity>(pentagon);
+	std::shared_ptr<GameEntity> e2 = std::make_shared<GameEntity>(pentagon);
+	std::shared_ptr<GameEntity> e3 = std::make_shared<GameEntity>(triangle);
+	std::shared_ptr<GameEntity> e4 = std::make_shared<GameEntity>(rectangle);
+	std::shared_ptr<GameEntity> e5 = std::make_shared<GameEntity>(rectangle);
+
+	e1->GetTransform().MoveAbsolute(-0.2f, -0.5f, 0.0f);
+	e2->GetTransform().MoveAbsolute(0.0f, -0.0f, 0.0f);
+	e3->GetTransform().Rotate(0.0f, 0.0f, 3.14f);
+	e4->GetTransform().MoveAbsolute(-0.2f, 0.0f, 0.0f);
+	e5->GetTransform().MoveAbsolute(0.0f, -0.5f, 0.0f);
+	
+
+	entities.push_back(e1);
+	entities.push_back(e2);
+	entities.push_back(e3);
+	entities.push_back(e4);
+	entities.push_back(e5);
 }
 
 // --------------------------------------------------------
@@ -260,6 +279,12 @@ void Game::Update(float deltaTime, float totalTime)
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
+
+	entities[0]->GetTransform().SetPosition(-0.2f, (float)sin(totalTime)*0.5f-0.5f, 0);
+	entities[2]->GetTransform().Rotate(0, 0, deltaTime * 1.0f);
+	entities[3]->GetTransform().SetScale((float)sin(totalTime)*0.5+1.0, (float)sin(totalTime)*0.5+1.0, 0.0f);
+	
+
 }
 
 
@@ -278,18 +303,18 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 
 	{
-		// loop through shared pointers of meshes and draw them
-		for (std::shared_ptr<Mesh> mesh : meshes) {
+		// loop through entities and draw them
+		for (std::shared_ptr<GameEntity> entity : entities) {
 			VertexShaderData cbData;
 			cbData.colorTint = XMFLOAT4(shaderTint);
-			cbData.offset = XMFLOAT3(shaderOffset);
+			cbData.world = entity->GetTransform().GetWorldMatrix();
 
 			D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
 			Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 			memcpy(mappedBuffer.pData, &cbData, sizeof(cbData));
 			Graphics::Context->Unmap(constBuffer.Get(), 0);
 
-			mesh->Draw();
+			entity->Draw();
 		}
 
 		ImGui::Render(); // Turns this frame’s UI into renderable triangles
@@ -395,7 +420,21 @@ void Game::BuildUI() {
 		// close node tree
 		ImGui::TreePop();
 	}
-	
+	if (ImGui::TreeNode("Entities"))
+	{
+		for (int i = 0; i < entities.size(); i++) {
+			ImGui::PushID(entities[i].get());
+			if (ImGui::TreeNode("Entity Node", "Entity %d", i+1)) {
+				//ImGui::DragFloat3("Position",)
+				ImGui::Text("\tIndex Count: %d", entities[i]->GetMesh()->GetIndexCount());
+				ImGui::TreePop();
+			}
+			ImGui::PopID();
+		}
+
+		// close node tree
+		ImGui::TreePop();
+	}
 	ImGui::SliderFloat3("Offset", shaderOffset, -1.0f, 1.0f);
 	ImGui::ColorEdit4("Tint", shaderTint);
 

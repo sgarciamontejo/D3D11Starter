@@ -6,6 +6,7 @@
 #include "Mesh.h"
 #include "Vertex.h"
 #include "BufferStructs.h"
+#include "GameEntity.h"
 #include <vector>
 
 class Game
@@ -36,6 +37,9 @@ private:
 	std::shared_ptr<Mesh> triangle; 
 	std::shared_ptr<Mesh> rectangle;
 	std::shared_ptr<Mesh> pentagon;
+
+	// Game Entities
+	std::vector<std::shared_ptr<GameEntity>> entities;
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();
