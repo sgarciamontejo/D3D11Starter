@@ -365,18 +365,7 @@ void Game::BuildUI() {
 		window_flags |= ImGuiWindowFlags_NoResize;
 	}
 
-	ImGui::Begin("Test Window", &activeWindow, window_flags);
-	if (ImGui::BeginMenuBar())
-	{
-		if (ImGui::BeginMenu("File"))
-		{
-			if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
-			if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */ }
-			if (ImGui::MenuItem("Close", "Ctrl+W")) { /* Do other stuff */ }
-			ImGui::EndMenu();
-		}
-		ImGui::EndMenuBar();
-	}
+	ImGui::Begin("Info", &activeWindow, window_flags);
 
 	// Replace the %f with the next parameter, and format as a float
 	ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
@@ -425,8 +414,19 @@ void Game::BuildUI() {
 		for (int i = 0; i < entities.size(); i++) {
 			ImGui::PushID(entities[i].get());
 			if (ImGui::TreeNode("Entity Node", "Entity %d", i+1)) {
-				//ImGui::DragFloat3("Position",)
-				ImGui::Text("\tIndex Count: %d", entities[i]->GetMesh()->GetIndexCount());
+				std::shared_ptr<GameEntity> entity = entities[i];
+				std::shared_ptr<Mesh> mesh = entity->GetMesh();
+
+				//Transform
+				Transform transform = entity->GetTransform();
+				XMFLOAT3 position = transform.GetPosition();
+				XMFLOAT3 rotation = transform.GetPitchYawRoll();
+				XMFLOAT3 scale = transform.GetScale();
+
+				if (ImGui::DragFloat3("Position", &position.x, 0.01f)) transform.SetPosition(position);
+				if (ImGui::DragFloat3("Rotation", &rotation.x, 0.01f)) transform.SetRotation(rotation);
+				if (ImGui::DragFloat3("Scale", &scale.x, 0.01f)) transform.SetScale(scale);
+				//ImGui::Text("\tIndex Count: %d", entity->GetMesh()->GetIndexCount());
 				ImGui::TreePop();
 			}
 			ImGui::PopID();
