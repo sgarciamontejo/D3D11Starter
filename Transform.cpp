@@ -120,3 +120,11 @@ void Transform::Scale(XMFLOAT3 scale)
 	this->scale.y += scale.y;
 	this->scale.z += scale.z;
 }
+
+void Transform::MoveRelative(float x, float y, float z)
+{
+}
+
+void Transform::MoveRelative(XMFLOAT3 offset)
+{
+}

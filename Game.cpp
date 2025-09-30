@@ -418,7 +418,7 @@ void Game::BuildUI() {
 				std::shared_ptr<Mesh> mesh = entity->GetMesh();
 
 				//Transform
-				Transform transform = entity->GetTransform();
+				Transform& transform = entity->GetTransform();
 				XMFLOAT3 position = transform.GetPosition();
 				XMFLOAT3 rotation = transform.GetPitchYawRoll();
 				XMFLOAT3 scale = transform.GetScale();
@@ -435,7 +435,6 @@ void Game::BuildUI() {
 		// close node tree
 		ImGui::TreePop();
 	}
-	ImGui::SliderFloat3("Offset", shaderOffset, -1.0f, 1.0f);
 	ImGui::ColorEdit4("Tint", shaderTint);
 
 	ImGui::End(); //end window
