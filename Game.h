@@ -7,6 +7,7 @@
 #include "Vertex.h"
 #include "BufferStructs.h"
 #include "GameEntity.h"
+#include "Camera.h"
 #include <vector>
 
 class Game
@@ -40,6 +41,7 @@ private:
 
 	// Game Entities
 	std::vector<std::shared_ptr<GameEntity>> entities;
+	std::shared_ptr<Camera> cam;
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();

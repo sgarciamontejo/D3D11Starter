@@ -51,6 +51,8 @@ Game::Game()
 	LoadShaders();
 	CreateGeometry();
 
+	cam = std::make_shared<Camera>(Window::AspectRatio());
+
 	// Set initial graphics API state
 	//  - These settings persist until we change them
 	//  - Some of these, like the primitive topology & input layout, probably won't change
@@ -262,7 +264,9 @@ void Game::CreateGeometry()
 // --------------------------------------------------------
 void Game::OnResize()
 {
-	
+	if (cam) {
+		cam->GetProjectionMatrix();
+	}
 }
 
 
@@ -271,6 +275,7 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
+	cam->Update(deltaTime);
 	UpdateImGui(deltaTime);
 
 	// Make changes to UI with this helper
@@ -308,6 +313,8 @@ void Game::Draw(float deltaTime, float totalTime)
 			VertexShaderData cbData;
 			cbData.colorTint = XMFLOAT4(shaderTint);
 			cbData.world = entity->GetTransform().GetWorldMatrix();
+			cbData.projection = cam->GetProjectionMatrix();
+			cbData.view = cam->GetViewMatrix();
 
 			D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
 			Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);

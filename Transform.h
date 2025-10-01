@@ -29,15 +29,18 @@ public:
 	XMFLOAT3 GetScale();
 	XMFLOAT4X4 GetWorldMatrix();
 	XMFLOAT4X4 GetWorldInverseTransposeMatrix();
+	XMFLOAT3 GetRight();
+	XMFLOAT3 GetUp();
+	XMFLOAT3 GetForward();
 
 	// Transformers
 	void MoveAbsolute(float x, float y, float z);
 	void MoveAbsolute(XMFLOAT3 offset);
+	void MoveRelative(float x, float y, float z);
+	void MoveRelative(XMFLOAT3 offset);
 	void Rotate(float pitch, float yaw, float roll);
 	void Rotate(XMFLOAT3 rotation);
 	void Scale(float x, float y, float z);
 	void Scale(XMFLOAT3 scale);
-	void MoveRelative(float x, float y, float z);
-	void MoveRelative(XMFLOAT3 offset);
 };
 
