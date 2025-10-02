@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-Camera::Camera(float aspectRatio, XMFLOAT3 position = XMFLOAT3(0,0,0))
+Camera::Camera(float aspectRatio, XMFLOAT3 position, float fov)
 {
     transform.SetPosition(position);
 
@@ -25,17 +25,20 @@ XMFLOAT4X4 Camera::GetProjectionMatrix()
 void Camera::UpdateProjectionMatrix(float aspectRatio)
 {
     if (isometric) { return; }
+
     //perspective
-    fov = 90;
-    nearClip = 0.1f;
-    farClip = 500.0f;
+    nearClip = 0.01f;
+    farClip = 1000.0f;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(fov, aspectRatio, nearClip, farClip);
     XMStoreFloat4x4(&projMatrix, projection);
 }
 
 void Camera::UpdateViewMatrix()
 {
-    XMMATRIX view = XMMatrixLookToLH(XMLoadFloat3(&transform.GetPosition()), XMLoadFloat3(&transform.GetForward()), XMLoadFloat3(&transform.GetUp()));
+    XMFLOAT3 pos = transform.GetPosition();
+    XMFLOAT3 forward = transform.GetForward();
+    XMFLOAT3 up = transform.GetUp();
+    XMMATRIX view = XMMatrixLookToLH(XMLoadFloat3(&pos), XMLoadFloat3(&forward), XMLoadFloat3(&up));
     XMStoreFloat4x4(&viewMatrix, view);
 }
 
@@ -49,14 +52,14 @@ void Camera::Update(float dt)
     if (Input::KeyDown('D')) { transform.MoveRelative(XMFLOAT3(camSpeed, 0, 0)); }
     if (Input::KeyDown('X')) { transform.MoveAbsolute(XMFLOAT3(0, -camSpeed, 0)); }
     if (Input::KeyDown(' ')) { transform.MoveAbsolute(XMFLOAT3(0, camSpeed, 0)); }
-    if (Input::KeyDown(VK_SHIFT)) { speed *= 3; }
-    if (Input::KeyDown(VK_CONTROL)) { speed *= 0.1; }
+    if (Input::KeyDown(VK_SHIFT)) { camSpeed *= 3; }
+    if (Input::KeyDown(VK_CONTROL)) { camSpeed *= 0.1; }
 
     if (Input::MouseLeftDown())
     {
         //rotate
-        int cursorMovementX = Input::GetMouseXDelta();
-        int cursorMovementY = Input::GetMouseYDelta();
+        float cursorMovementX = lookSpeed * Input::GetMouseXDelta();
+        float cursorMovementY = lookSpeed * Input::GetMouseYDelta();
         transform.Rotate(cursorMovementY, cursorMovementX, 0);
 
         //clamp

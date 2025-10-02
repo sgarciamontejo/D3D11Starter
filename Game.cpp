@@ -51,7 +51,9 @@ Game::Game()
 	LoadShaders();
 	CreateGeometry();
 
-	cam = std::make_shared<Camera>(Window::AspectRatio());
+	cameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -10.0f))); // cam 1
+	cameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(-5.0f, 2.25f, -10.0f))); // cam 2
+	activeCamera = cameras[0];
 
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -264,8 +266,10 @@ void Game::CreateGeometry()
 // --------------------------------------------------------
 void Game::OnResize()
 {
-	if (cam) {
-		cam->GetProjectionMatrix();
+	if (cameras.size() > 0) {
+		for (int i = 0; i < cameras.size(); i++) {
+			cameras[i]->GetProjectionMatrix();
+		}
 	}
 }
 
@@ -275,7 +279,7 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
-	cam->Update(deltaTime);
+	activeCamera->Update(deltaTime);
 	UpdateImGui(deltaTime);
 
 	// Make changes to UI with this helper
@@ -313,8 +317,8 @@ void Game::Draw(float deltaTime, float totalTime)
 			VertexShaderData cbData;
 			cbData.colorTint = XMFLOAT4(shaderTint);
 			cbData.world = entity->GetTransform().GetWorldMatrix();
-			cbData.projection = cam->GetProjectionMatrix();
-			cbData.view = cam->GetViewMatrix();
+			cbData.projection = activeCamera->GetProjectionMatrix();
+			cbData.view = activeCamera->GetViewMatrix();
 
 			D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
 			Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
@@ -374,6 +378,12 @@ void Game::BuildUI() {
 
 	ImGui::Begin("Info", &activeWindow, window_flags);
 
+	if (ImGui::Button("Show Demo Window"))
+	{
+		// This will only execute on frames in which the button is clicked
+		demoOpen = !demoOpen;
+	}
+
 	// Replace the %f with the next parameter, and format as a float
 	ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
 	// Replace each %d with the next parameter, and format as decimal integers
@@ -381,13 +391,7 @@ void Game::BuildUI() {
 	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
 
 	ImGui::ColorEdit4("Background Color", &demoColor[0]);
-	
-
-	if (ImGui::Button("Show Demo Window"))
-	{
-		// This will only execute on frames in which the button is clicked
-		demoOpen = !demoOpen;
-	}
+	ImGui::ColorEdit4("Tint", shaderTint);
 
 	// these are technically 3 elements including the header
 	if (ImGui::TreeNode("Meshes"))
@@ -442,7 +446,41 @@ void Game::BuildUI() {
 		// close node tree
 		ImGui::TreePop();
 	}
-	ImGui::ColorEdit4("Tint", shaderTint);
+	
+	// Cameras
+	if (ImGui::TreeNode("Camera Info")) {
+		for (int i = 0; i < cameras.size(); i++) {
+			ImGui::PushID(cameras[i].get());
+			if (ImGui::TreeNode("Camera Node", "Camera %d", i + 1)) {
+				Transform& transform = cameras[i]->transform;
+				XMFLOAT3 position = transform.GetPosition();
+				XMFLOAT3 rotation = transform.GetPitchYawRoll();
+				float fovDegrees = XMConvertToDegrees(cameras[i]->fov);
+
+				if(ImGui::DragFloat3("\tPosition", &position.x, 0.01f)) transform.SetPosition(position);
+				if(ImGui::DragFloat3("\Rotation", &rotation.x, 0.01f)) transform.SetRotation(rotation);
+				if (ImGui::DragFloat("\Field of View", &fovDegrees, 0.5f, 45.0f, 90.0f)) {
+					cameras[i]->fov = XMConvertToRadians(fovDegrees);
+					cameras[i]->UpdateProjectionMatrix(Window::AspectRatio());
+				}
+				ImGui::Text("\Projection: %s", cameras[i]->isometric ? "Isometric" : "Perspective");
+
+				ImGui::TreePop();
+			}
+			ImGui::PopID();
+		}
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Active Camera")) {
+		if (ImGui::RadioButton("Camera 1", &radioIndex, 0)) {
+			activeCamera = cameras[0];
+		}
+		if (ImGui::RadioButton("Camera 2", &radioIndex, 1)) {
+			activeCamera = cameras[1];
+		}
+		ImGui::TreePop();
+	}
 
 	ImGui::End(); //end window
 }

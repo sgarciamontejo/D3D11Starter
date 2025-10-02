@@ -2,9 +2,9 @@
 #include <DirectXMath.h>
 struct VertexShaderData
 {
-	XMFLOAT4 colorTint;
-	XMFLOAT4X4 world;
-	XMFLOAT4X4 projection;
-	XMFLOAT4X4 view;
+	DirectX::XMFLOAT4 colorTint;
+	DirectX::XMFLOAT4X4 world;
+	DirectX::XMFLOAT4X4 projection;
+	DirectX::XMFLOAT4X4 view;
 };
 

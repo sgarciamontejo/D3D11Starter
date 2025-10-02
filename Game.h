@@ -32,6 +32,7 @@ private:
 	float demoColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 	float shaderOffset[3];
 	float shaderTint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	int radioIndex = 0;
 
 	// New Geometry
 	std::vector<std::shared_ptr<Mesh>> meshes;
@@ -41,7 +42,10 @@ private:
 
 	// Game Entities
 	std::vector<std::shared_ptr<GameEntity>> entities;
-	std::shared_ptr<Camera> cam;
+
+	// Camera
+	std::vector<std::shared_ptr<Camera>> cameras;
+	std::shared_ptr<Camera> activeCamera;
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();
