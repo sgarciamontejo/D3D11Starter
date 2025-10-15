@@ -126,7 +126,7 @@ void Transform::MoveAbsolute(XMFLOAT3 offset)
 void Transform::MoveRelative(float x, float y, float z)
 {
 	XMVECTOR dir = XMVectorSet(x, y, z, 0); //direction
-	XMVECTOR rot = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.x, rotation.z); //rotation quaternion
+	XMVECTOR rot = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z); //rotation quaternion
 
 	XMStoreFloat3(&position, 
 		XMLoadFloat3(&position) + XMVector3Rotate(dir, rot));
