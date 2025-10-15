@@ -21,3 +21,15 @@ Microsoft::WRL::ComPtr<ID3D11VertexShader> Material::GetVertexShader() {
 Microsoft::WRL::ComPtr<ID3D11PixelShader> Material::GetPixelShader() {
 	return ps;
 }
+
+void Material::SetColorTint(DirectX::XMFLOAT4 colorTint) {
+	this->colorTint = colorTint;
+}
+
+void Material::SetVertexShader(Microsoft::WRL::ComPtr<ID3D11VertexShader> vs) {
+	this->vs = vs;
+}
+
+void Material::SetPixelShader(Microsoft::WRL::ComPtr<ID3D11PixelShader> ps) {
+	this->ps = ps;
+}
