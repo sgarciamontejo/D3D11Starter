@@ -24,16 +24,26 @@ using namespace DirectX;
 // --------------------------------------------------------
 Game::Game()
 {
+	// Create Vertex Shader Constant Buffer
 	// Calculate byte width
-	unsigned int size = sizeof(VertexShaderData);
-	size = (size + 15) / 16 * 16;
-	// Constant Buffer
+	unsigned int vsSize = sizeof(VertexShaderData);
+	vsSize = (vsSize + 15) / 16 * 16;
 	D3D11_BUFFER_DESC cbDesc = {};
 	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.ByteWidth = size;
+	cbDesc.ByteWidth = vsSize;
 	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	Graphics::Device->CreateBuffer(&cbDesc, 0, constBuffer.GetAddressOf());
+	Graphics::Device->CreateBuffer(&cbDesc, 0, vs_constBuffer.GetAddressOf());
+
+	// Create Pixel Shader Constant Buffer
+	unsigned int psSize = sizeof(PixelShaderData);
+	psSize = (psSize + 15) / 16 * 16;
+	D3D11_BUFFER_DESC ps_cbDesc = {};
+	ps_cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	ps_cbDesc.ByteWidth = psSize;
+	ps_cbDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+	ps_cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	Graphics::Device->CreateBuffer(&ps_cbDesc, 0, ps_constBuffer.GetAddressOf());
 
 	// Initialize ImGui itself & platform/renderer backends
 	IMGUI_CHECKVERSION();
@@ -112,7 +122,8 @@ Game::Game()
 		//Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
 
 		// Set Const Buffer
-		Graphics::Context->VSSetConstantBuffers(0, 1, constBuffer.GetAddressOf());
+		Graphics::Context->VSSetConstantBuffers(0, 1, vs_constBuffer.GetAddressOf());
+		Graphics::Context->PSSetConstantBuffers(0, 1, ps_constBuffer.GetAddressOf());
 	}
 }
 
@@ -257,18 +268,27 @@ void Game::CreateGeometry()
 	std::shared_ptr<Material> matGreen = std::make_shared<Material>(halfGreen, firstVertexShader, firstPixelShader);
 	std::shared_ptr<Material> matBlue = std::make_shared<Material>(halfBlue, firstVertexShader, firstPixelShader);
 
+	// Load Meshes
+	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>("Cube", FixPath(L"../../Assets/Meshes/cube.obj").c_str());
+	std::shared_ptr<Mesh> cylinder = std::make_shared<Mesh>("Cylinder", FixPath(L"../../Assets/Meshes/cylinder.obj").c_str());
+	std::shared_ptr<Mesh> helix = std::make_shared<Mesh>("Helix", FixPath(L"../../Assets/Meshes/helix.obj").c_str());
+	std::shared_ptr<Mesh> quad = std::make_shared<Mesh>("Quad", FixPath(L"../../Assets/Meshes/quad.obj").c_str());
+	std::shared_ptr<Mesh> quad_double_sided = std::make_shared<Mesh>("Quad Double Sided", FixPath(L"../../Assets/Meshes/quad_double_sided.obj").c_str());
+	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>("Sphere", FixPath(L"../../Assets/Meshes/sphere.obj").c_str());
+	std::shared_ptr<Mesh> torus = std::make_shared<Mesh>("Torus", FixPath(L"../../Assets/Meshes/torus.obj").c_str());
 
-	std::shared_ptr<GameEntity> e1 = std::make_shared<GameEntity>(pentagon, matRed);
-	std::shared_ptr<GameEntity> e2 = std::make_shared<GameEntity>(pentagon, matGreen);
-	std::shared_ptr<GameEntity> e3 = std::make_shared<GameEntity>(triangle, matBlue);
-	std::shared_ptr<GameEntity> e4 = std::make_shared<GameEntity>(rectangle, matGreen);
-	std::shared_ptr<GameEntity> e5 = std::make_shared<GameEntity>(rectangle, matBlue);
 
-	e1->GetTransform().MoveAbsolute(-0.2f, -0.5f, 0.0f);
-	e2->GetTransform().MoveAbsolute(0.0f, -0.0f, 0.0f);
+	std::shared_ptr<GameEntity> e1 = std::make_shared<GameEntity>(cube, matRed);
+	std::shared_ptr<GameEntity> e2 = std::make_shared<GameEntity>(cylinder, matGreen);
+	std::shared_ptr<GameEntity> e3 = std::make_shared<GameEntity>(helix, matBlue);
+	std::shared_ptr<GameEntity> e4 = std::make_shared<GameEntity>(quad, matGreen);
+	std::shared_ptr<GameEntity> e5 = std::make_shared<GameEntity>(sphere, matBlue);
+
+	e1->GetTransform().MoveAbsolute(-6.0f, -0.5f, 0.0f);
+	e2->GetTransform().MoveAbsolute(5.0f, -0.0f, 0.0f);
 	e3->GetTransform().Rotate(0.0f, 0.0f, 3.14f);
-	e4->GetTransform().MoveAbsolute(-0.2f, 0.0f, 0.0f);
-	e5->GetTransform().MoveAbsolute(0.0f, -0.5f, 0.0f);
+	e4->GetTransform().MoveAbsolute(-0.2f, 5.0f, 0.0f);
+	e5->GetTransform().MoveAbsolute(0.0f, -5.0f, 0.0f);
 	
 
 	entities.push_back(e1);
@@ -336,16 +356,27 @@ void Game::Draw(float deltaTime, float totalTime)
 			Graphics::Context->VSSetShader(entity->GetMaterial()->GetVertexShader().Get(), 0, 0);
 			Graphics::Context->PSSetShader(entity->GetMaterial()->GetPixelShader().Get(), 0, 0);
 
-			VertexShaderData cbData;
-			cbData.colorTint = entity->GetMaterial()->GetColorTint();
-			cbData.world = entity->GetTransform().GetWorldMatrix();
-			cbData.projection = activeCamera->GetProjectionMatrix();
-			cbData.view = activeCamera->GetViewMatrix();
+			// VS DATA
+			VertexShaderData vsData;
+			//cbData.colorTint = entity->GetMaterial()->GetColorTint();
+			vsData.world = entity->GetTransform().GetWorldMatrix();
+			vsData.projection = activeCamera->GetProjectionMatrix();
+			vsData.view = activeCamera->GetViewMatrix();
+
+			// PS DATA
+			PixelShaderData psData;
+			psData.colorTint = entity->GetMaterial()->GetColorTint();
 
 			D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-			Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-			memcpy(mappedBuffer.pData, &cbData, sizeof(cbData));
-			Graphics::Context->Unmap(constBuffer.Get(), 0);
+			// map the Vertex Shader cb
+			Graphics::Context->Map(vs_constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+			memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
+			Graphics::Context->Unmap(vs_constBuffer.Get(), 0);
+
+			// map the Pixel Shader cb
+			Graphics::Context->Map(ps_constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+			memcpy(mappedBuffer.pData, &psData, sizeof(psData));
+			Graphics::Context->Unmap(ps_constBuffer.Get(), 0);
 
 			entity->Draw();
 		}
@@ -418,27 +449,14 @@ void Game::BuildUI() {
 	// these are technically 3 elements including the header
 	if (ImGui::TreeNode("Meshes"))
 	{
-		if (ImGui::TreeNode("Triangle")) {
-			ImGui::Text("\tTriangles: %d", triangle->GetIndexCount() / 3);
-			ImGui::Text("\tVertices: %d", triangle->GetVertexCount());
-			ImGui::Text("\tIndices: %d", triangle->GetIndexCount());
-			ImGui::TreePop();
+		for (int i = 0; i < meshes.size(); i++) {
+			if (ImGui::TreeNode(meshes[i]->GetName())) {
+				ImGui::Text("\tTriangles: %d", meshes[i]->GetIndexCount() / 3);
+				ImGui::Text("\tVertices: %d", meshes[i]->GetVertexCount());
+				ImGui::Text("\tIndices: %d", meshes[i]->GetIndexCount());
+				ImGui::TreePop();
+			}
 		}
-
-		if (ImGui::TreeNode("Rectangle")) {
-			ImGui::Text("\tTriangles: %d", rectangle->GetIndexCount() / 3);
-			ImGui::Text("\tVertices: %d", rectangle->GetVertexCount());
-			ImGui::Text("\tIndices: %d", rectangle->GetIndexCount());
-			ImGui::TreePop();
-		}
-		
-		if (ImGui::TreeNode("Pentagon")) {
-			ImGui::Text("\tTriangles: %d", pentagon->GetIndexCount() / 3);
-			ImGui::Text("\tVertices: %d", pentagon->GetVertexCount());
-			ImGui::Text("\tIndices: %d", pentagon->GetIndexCount());
-			ImGui::TreePop();
-		}
-
 		// close node tree
 		ImGui::TreePop();
 	}

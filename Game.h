@@ -36,9 +36,6 @@ private:
 
 	// New Geometry
 	std::vector<std::shared_ptr<Mesh>> meshes;
-	std::shared_ptr<Mesh> triangle; 
-	std::shared_ptr<Mesh> rectangle;
-	std::shared_ptr<Mesh> pentagon;
 
 	// Game Entities
 	std::vector<std::shared_ptr<GameEntity>> entities;
@@ -66,7 +63,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
 	// Const Buffers
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> vs_constBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> ps_constBuffer;
 
 	// Helpers
 	void UpdateImGui(float deltaTime);

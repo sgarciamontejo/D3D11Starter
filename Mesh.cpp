@@ -6,14 +6,16 @@
 using namespace DirectX;
 
 //Construct a new mesh using vertices and indices
-Mesh::Mesh(Vertex vertices[], int numVertices, unsigned int indices[], int numIndices) {
+Mesh::Mesh(const char* name, Vertex vertices[], int numVertices, unsigned int indices[], int numIndices) {
 	this->numIndices = numIndices;
 	this->numVertices = numVertices;
+	this->name = name;
 
 	CreateBuffers(vertices, numVertices, indices, numIndices);
 }
 
-Mesh::Mesh(std::string name, const std::wstring& objFile) {
+Mesh::Mesh(const char* name, const std::wstring& objFile) {
+	this->name = name;
 // Author: Chris Cascioli
 // Purpose: Basic .OBJ 3D model loading, supporting positions, uvs and normals
 // 
@@ -343,6 +345,10 @@ int Mesh::GetVertexCount() {
 
 int Mesh::GetIndexCount() {
 	return numIndices;
+}
+
+const char* Mesh::GetName() {
+	return name;
 }
 
 // Draw
