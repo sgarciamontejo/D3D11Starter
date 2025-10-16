@@ -9,8 +9,8 @@ class Mesh
 {
 private:
 	// Buffers to hold actual geometry data
-	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> vb;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> ib;
 	int numIndices; // num of indices - drawing
 	int numVertices; // num of vertices - UI
 
@@ -18,8 +18,10 @@ private:
 
 public:
 	Mesh(Vertex vertices[], int numVertices, unsigned int indices[], int numIndices);
+	Mesh(std::string name, const std::wstring& objFile);
 	~Mesh();
 	void Draw();
+	void CreateBuffers(Vertex* vertices, int numVertices, unsigned int* indices, int numIndices);
 	Microsoft::WRL::ComPtr<ID3D11Buffer> GetVertexBuffer();
 	Microsoft::WRL::ComPtr<ID3D11Buffer> GetIndexBuffer();
 	int GetVertexCount();
