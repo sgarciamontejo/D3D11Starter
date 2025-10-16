@@ -264,9 +264,9 @@ void Game::CreateGeometry()
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> firstPixelShader = LoadPixelShader(L"PixelShader.cso");
 
 	// Create Materials
-	std::shared_ptr<Material> matRed = std::make_shared<Material>(halfRed, firstVertexShader, firstPixelShader);
-	std::shared_ptr<Material> matGreen = std::make_shared<Material>(halfGreen, firstVertexShader, firstPixelShader);
-	std::shared_ptr<Material> matBlue = std::make_shared<Material>(halfBlue, firstVertexShader, firstPixelShader);
+	std::shared_ptr<Material> matRed = std::make_shared<Material>(red, firstVertexShader, firstPixelShader);
+	std::shared_ptr<Material> matGreen = std::make_shared<Material>(green, firstVertexShader, firstPixelShader);
+	std::shared_ptr<Material> matBlue = std::make_shared<Material>(blue, firstVertexShader, firstPixelShader);
 
 	// Load Meshes
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>("Cube", FixPath(L"../../Assets/Meshes/cube.obj").c_str());
@@ -284,11 +284,12 @@ void Game::CreateGeometry()
 	std::shared_ptr<GameEntity> e4 = std::make_shared<GameEntity>(quad, matGreen);
 	std::shared_ptr<GameEntity> e5 = std::make_shared<GameEntity>(sphere, matBlue);
 
-	e1->GetTransform().MoveAbsolute(-6.0f, -0.5f, 0.0f);
+	e1->GetTransform().MoveAbsolute(-10.0f, -0.5f, 0.0f);
 	e2->GetTransform().MoveAbsolute(5.0f, -0.0f, 0.0f);
-	e3->GetTransform().Rotate(0.0f, 0.0f, 3.14f);
-	e4->GetTransform().MoveAbsolute(-0.2f, 5.0f, 0.0f);
-	e5->GetTransform().MoveAbsolute(0.0f, -5.0f, 0.0f);
+	e3->GetTransform().Rotate(0.0f, 3.14f, 0.0f);
+	e3->GetTransform().MoveAbsolute(-5.0f, 0.0f, 0.0f);
+	e4->GetTransform().MoveAbsolute(-0.2f, -5.0f, 0.0f);
+	e5->GetTransform().MoveAbsolute(0.0f, 5.0f, 0.0f);
 	
 
 	entities.push_back(e1);
@@ -328,8 +329,8 @@ void Game::Update(float deltaTime, float totalTime)
 		Window::Quit();
 
 	entities[0]->GetTransform().SetPosition(-0.2f, (float)sin(totalTime)*0.5f-0.5f, 0);
-	entities[2]->GetTransform().Rotate(0, 0, deltaTime * 1.0f);
-	entities[3]->GetTransform().SetScale((float)sin(totalTime)*0.5f+1.0f, (float)sin(totalTime)*0.5f+1.0f, 0.0f);
+	entities[2]->GetTransform().Rotate(0, deltaTime * 1.0f, 0);
+	//entities[3]->GetTransform().SetScale((float)sin(totalTime)*0.5f+1.0f, (float)sin(totalTime)*0.5f+1.0f, 0.0f);
 	
 
 }

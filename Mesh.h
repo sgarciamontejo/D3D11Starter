@@ -11,8 +11,8 @@ private:
 	// Buffers to hold actual geometry data
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vb;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ib;
-	int numIndices; // num of indices - drawing
-	int numVertices; // num of vertices - UI
+	int numIndices = 0; // num of indices - drawing
+	int numVertices = 0; // num of vertices - UI
 	const char* name; // name displayed in UI
 
 	//future - add variables to store textures and shader data

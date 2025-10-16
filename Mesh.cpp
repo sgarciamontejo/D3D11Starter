@@ -53,8 +53,6 @@ Mesh::Mesh(const char* name, const std::wstring& objFile) {
 	std::vector<XMFLOAT2> uvs;		// UVs from the file
 	std::vector<Vertex> verts;		// Verts we're assembling
 	std::vector<UINT> indices;		// Indices of these verts
-	int vertCounter = 0;			// Count of vertices
-	int indexCounter = 0;			// Count of indices
 	char chars[100];			// String for line reading
 
 	// Still have data left?
@@ -192,12 +190,12 @@ Mesh::Mesh(const char* name, const std::wstring& objFile) {
 			verts.push_back(v1);
 			verts.push_back(v3);
 			verts.push_back(v2);
-			vertCounter += 3;
+			numVertices += 3;
 
 			// Add three more indices
-			indices.push_back(indexCounter); indexCounter += 1;
-			indices.push_back(indexCounter); indexCounter += 1;
-			indices.push_back(indexCounter); indexCounter += 1;
+			indices.push_back(numIndices); numIndices += 1;
+			indices.push_back(numIndices); numIndices += 1;
+			indices.push_back(numIndices); numIndices += 1;
 
 			// Was there a 4th face?
 			// - 12 numbers read means 4 faces WITH uv's
@@ -219,19 +217,20 @@ Mesh::Mesh(const char* name, const std::wstring& objFile) {
 				verts.push_back(v1);
 				verts.push_back(v4);
 				verts.push_back(v3);
-				vertCounter += 3;
+				numVertices += 3;
 
 				// Add three more indices
-				indices.push_back(indexCounter); indexCounter += 1;
-				indices.push_back(indexCounter); indexCounter += 1;
-				indices.push_back(indexCounter); indexCounter += 1;
+				indices.push_back(numIndices); numIndices += 1;
+				indices.push_back(numIndices); numIndices += 1;
+				indices.push_back(numIndices); numIndices += 1;
 			}
 		}
 	}
 
 	// Close the file and create the actual buffers
 	obj.close();
-	CreateBuffers(&verts[0], vertCounter, &indices[0], indexCounter);
+	printf("Name: %s \nVertices: %i\n\n", name, numVertices);
+	CreateBuffers(&verts[0], numVertices, &indices[0], numIndices);
 	// *************************************
 	//      IMPLEMENTATION NOTES (2/2)
 	//
