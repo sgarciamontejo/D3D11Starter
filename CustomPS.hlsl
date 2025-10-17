@@ -10,15 +10,21 @@ struct VertexToPixel
 	//  |   Name          Semantic
 	//  |    |                |
 	//  v    v                v
-	float4 screenPosition	: SV_POSITION;
-    float2 uv				: TEXCOORD;
-    float3 normal			: NORMAL;
+    float4 screenPosition : SV_POSITION;
+    float2 uv : TEXCOORD;
+    float3 normal : NORMAL;
 };
 
 // Constant Buffer
 cbuffer ExternalData : register(b0)
 {
     float4 colorTint;
+    float time;
+}
+
+float random(float2 s)
+{
+    return frac(sin(dot(s, float2(12.9898, 78.233))) * 43758.5453123);
 }
 
 // --------------------------------------------------------
@@ -32,9 +38,9 @@ cbuffer ExternalData : register(b0)
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	// Just return the input color
-	// - This color (like most values passing through the rasterizer) is 
-	//   interpolated for each pixel between the corresponding vertices 
-	//   of the triangle we're rendering
-	return colorTint;
+	
+    return colorTint * random(input.uv * time);
+    //return float4(input.uv, 0, 1);
+    //return float4(input.normal, 1);
+
 }

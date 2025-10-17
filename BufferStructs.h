@@ -10,5 +10,6 @@ struct VertexShaderData
 struct PixelShaderData
 {
 	DirectX::XMFLOAT4 colorTint;
+	float time;
 };
 

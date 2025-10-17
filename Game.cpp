@@ -61,8 +61,10 @@ Game::Game()
 	LoadShaders();
 	CreateGeometry();
 
-	cameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -10.0f))); // cam 1
-	cameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(-5.0f, 2.25f, -10.0f))); // cam 2
+	cameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, 10.0f))); // cam 1
+	cameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(-5.0f, 2.25f, 10.0f))); // cam 2
+	cameras[0]->transform.SetRotation(XMFLOAT3(0, 3.14f, 0));
+	cameras[1]->transform.SetRotation(XMFLOAT3(0, 3.14f, 0));
 	activeCamera = cameras[0];
 
 	// Set initial graphics API state
@@ -259,14 +261,26 @@ void Game::CreateGeometry()
 	XMFLOAT4 halfGreen = XMFLOAT4(0.5f, 1.0f, 0.5f, 1.0f);
 	XMFLOAT4 halfBlue = XMFLOAT4(0.5f, 0.5f, 1.0f, 1.0f);
 
+	XMFLOAT4 white = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	XMFLOAT4 purple = XMFLOAT4(0.5f, 0.0f, 0.5f, 1.0f);
+
 	// Load Shaders
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> firstVertexShader = LoadVertexShader(L"VertexShader.cso");
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> firstPixelShader = LoadPixelShader(L"PixelShader.cso");
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> uvPixelShader = LoadPixelShader(L"DebugUVsPS.cso");
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> normalsPixelShader = LoadPixelShader(L"DebugNormalsPS.cso");
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> customPixelShader = LoadPixelShader(L"CustomPS.cso");
+
 
 	// Create Materials
 	std::shared_ptr<Material> matRed = std::make_shared<Material>(red, firstVertexShader, firstPixelShader);
-	std::shared_ptr<Material> matGreen = std::make_shared<Material>(green, firstVertexShader, firstPixelShader);
-	std::shared_ptr<Material> matBlue = std::make_shared<Material>(blue, firstVertexShader, firstPixelShader);
+	std::shared_ptr<Material> matWhite = std::make_shared<Material>(white, firstVertexShader, firstPixelShader);
+	std::shared_ptr<Material> matPurple = std::make_shared<Material>(purple, firstVertexShader, firstPixelShader);
+
+	std::shared_ptr<Material> matUV = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, uvPixelShader);
+	std::shared_ptr<Material> matNormals = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, normalsPixelShader);
+	std::shared_ptr<Material> matCustom = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, customPixelShader);
+
 
 	// Load Meshes
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>("Cube", FixPath(L"../../Assets/Meshes/cube.obj").c_str());
@@ -277,26 +291,75 @@ void Game::CreateGeometry()
 	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>("Sphere", FixPath(L"../../Assets/Meshes/sphere.obj").c_str());
 	std::shared_ptr<Mesh> torus = std::make_shared<Mesh>("Torus", FixPath(L"../../Assets/Meshes/torus.obj").c_str());
 
+	// Got this from the demo code, good shortcut to remember
+	meshes.insert(meshes.end(), { cube, cylinder, helix, quad, quad_double_sided, sphere, torus });
 
-	std::shared_ptr<GameEntity> e1 = std::make_shared<GameEntity>(cube, matRed);
-	std::shared_ptr<GameEntity> e2 = std::make_shared<GameEntity>(cylinder, matGreen);
-	std::shared_ptr<GameEntity> e3 = std::make_shared<GameEntity>(helix, matBlue);
-	std::shared_ptr<GameEntity> e4 = std::make_shared<GameEntity>(quad, matGreen);
-	std::shared_ptr<GameEntity> e5 = std::make_shared<GameEntity>(sphere, matBlue);
 
-	e1->GetTransform().MoveAbsolute(-10.0f, -0.5f, 0.0f);
-	e2->GetTransform().MoveAbsolute(5.0f, -0.0f, 0.0f);
-	e3->GetTransform().Rotate(0.0f, 3.14f, 0.0f);
-	e3->GetTransform().MoveAbsolute(-5.0f, 0.0f, 0.0f);
-	e4->GetTransform().MoveAbsolute(-0.2f, -5.0f, 0.0f);
-	e5->GetTransform().MoveAbsolute(0.0f, 5.0f, 0.0f);
-	
+	std::shared_ptr<GameEntity> cube1 = std::make_shared<GameEntity>(cube, matNormals);
+	std::shared_ptr<GameEntity> cube2 = std::make_shared<GameEntity>(cube, matUV);
+	std::shared_ptr<GameEntity> cube3 = std::make_shared<GameEntity>(cube, matWhite);
+	std::shared_ptr<GameEntity> cylinder1 = std::make_shared<GameEntity>(cylinder, matNormals);
+	std::shared_ptr<GameEntity> cylinder2 = std::make_shared<GameEntity>(cylinder, matUV);
+	std::shared_ptr<GameEntity> cylinder3 = std::make_shared<GameEntity>(cylinder, matRed);
+	std::shared_ptr<GameEntity> helix1 = std::make_shared<GameEntity>(helix, matNormals);
+	std::shared_ptr<GameEntity> helix2 = std::make_shared<GameEntity>(helix, matUV);
+	std::shared_ptr<GameEntity> helix3 = std::make_shared<GameEntity>(helix, matPurple);
+	std::shared_ptr<GameEntity> sphere1 = std::make_shared<GameEntity>(sphere, matNormals);
+	std::shared_ptr<GameEntity> sphere2 = std::make_shared<GameEntity>(sphere, matUV);
+	std::shared_ptr<GameEntity> sphere3 = std::make_shared<GameEntity>(sphere, matCustom);
+	std::shared_ptr<GameEntity> torus1 = std::make_shared<GameEntity>(torus, matNormals);
+	std::shared_ptr<GameEntity> torus2 = std::make_shared<GameEntity>(torus, matUV);
+	std::shared_ptr<GameEntity> torus3 = std::make_shared<GameEntity>(torus, matPurple);
+	std::shared_ptr<GameEntity> quad1 = std::make_shared<GameEntity>(quad, matNormals);
+	std::shared_ptr<GameEntity> quad2 = std::make_shared<GameEntity>(quad, matUV);
+	std::shared_ptr<GameEntity> quad3 = std::make_shared<GameEntity>(quad, matRed);
+	std::shared_ptr<GameEntity> quad_double_sided1 = std::make_shared<GameEntity>(quad_double_sided, matNormals);
+	std::shared_ptr<GameEntity> quad_double_sided2 = std::make_shared<GameEntity>(quad_double_sided, matUV);
+	std::shared_ptr<GameEntity> quad_double_sided3 = std::make_shared<GameEntity>(quad_double_sided, matWhite);
 
-	entities.push_back(e1);
-	entities.push_back(e2);
-	entities.push_back(e3);
-	entities.push_back(e4);
-	entities.push_back(e5);
+	cube1->GetTransform().MoveAbsolute(15.0f, 5.0f, -10.0f);
+	cube2->GetTransform().MoveAbsolute(15.0f, 0.0f, -10.0f);
+	cube3->GetTransform().MoveAbsolute(15.0f, -5.0f, -10.0f);
+	cylinder1->GetTransform().MoveAbsolute(10.0f, 5.0f, -10.0f);
+	cylinder2->GetTransform().MoveAbsolute(10.0f, 0.0f, -10.0f);
+	cylinder3->GetTransform().MoveAbsolute(10.0f, -5.0f, -10.0f);
+	helix1->GetTransform().MoveAbsolute(5.0f, 5.0f, -10.0f);
+	helix2->GetTransform().MoveAbsolute(5.0f, 0.0f, -10.0f);
+	helix3->GetTransform().MoveAbsolute(5.0f, -5.0f, -10.0f);
+	sphere1->GetTransform().MoveAbsolute(0.0f, 5.0f, -10.0f);
+	sphere2->GetTransform().MoveAbsolute(0.0f, 0.0f, -10.0f);
+	sphere3->GetTransform().MoveAbsolute(0.0f, -5.0f, -10.0f);
+	torus1->GetTransform().MoveAbsolute(-5.0f, 5.0f, -10.0f);
+	torus2->GetTransform().MoveAbsolute(-5.0f, 0.0f, -10.0f);
+	torus3->GetTransform().MoveAbsolute(-5.0f, -5.0f, -10.0f);
+	quad1->GetTransform().MoveAbsolute(-10.0f, 5.0f, -10.0f);
+	quad2->GetTransform().MoveAbsolute(-10.0f, 0.0f, -10.0f);
+	quad3->GetTransform().MoveAbsolute(-10.0f, -5.0f, -10.0f);
+	quad_double_sided1->GetTransform().MoveAbsolute(-15.0f, 5.0f, -10.0f);
+	quad_double_sided2->GetTransform().MoveAbsolute(-15.0f, 0.0f, -10.0f);
+	quad_double_sided3->GetTransform().MoveAbsolute(-15.0f, -5.0f, -10.0f);
+
+	entities.push_back(cube1);
+	entities.push_back(cube2);
+	entities.push_back(cube3);
+	entities.push_back(cylinder1);
+	entities.push_back(cylinder2);
+	entities.push_back(cylinder3);
+	entities.push_back(helix1);
+	entities.push_back(helix2);
+	entities.push_back(helix3);
+	entities.push_back(quad1);
+	entities.push_back(quad2);
+	entities.push_back(quad3);
+	entities.push_back(quad_double_sided1);
+	entities.push_back(quad_double_sided2);
+	entities.push_back(quad_double_sided3);
+	entities.push_back(sphere1);
+	entities.push_back(sphere2);
+	entities.push_back(sphere3);
+	entities.push_back(torus1);
+	entities.push_back(torus2);
+	entities.push_back(torus3);
 }
 
 // --------------------------------------------------------
@@ -328,11 +391,9 @@ void Game::Update(float deltaTime, float totalTime)
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
 
-	entities[0]->GetTransform().SetPosition(-0.2f, (float)sin(totalTime)*0.5f-0.5f, 0);
-	entities[2]->GetTransform().Rotate(0, deltaTime * 1.0f, 0);
+	//entities[0]->GetTransform().SetPosition(-0.2f, (float)sin(totalTime)*0.5f-0.5f, 0);
+	//entities[2]->GetTransform().Rotate(0, deltaTime * 1.0f, 0);
 	//entities[3]->GetTransform().SetScale((float)sin(totalTime)*0.5f+1.0f, (float)sin(totalTime)*0.5f+1.0f, 0.0f);
-	
-
 }
 
 
@@ -367,6 +428,7 @@ void Game::Draw(float deltaTime, float totalTime)
 			// PS DATA
 			PixelShaderData psData;
 			psData.colorTint = entity->GetMaterial()->GetColorTint();
+			psData.time = totalTime;
 
 			D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
 			// map the Vertex Shader cb
