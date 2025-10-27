@@ -229,6 +229,15 @@ void Game::CreateGeometry()
 	std::shared_ptr<Material> matNormals = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, normalsPixelShader);
 	std::shared_ptr<Material> matCustom = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, customPixelShader);
 
+	std::shared_ptr<Material> matWood = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, firstPixelShader);
+	std::shared_ptr<Material> matRock = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, firstPixelShader);
+	
+	// Add Textures and Samplers
+	matWood->AddTextureSRV(0, rockWallResource);
+	matWood->AddSampler(0, samplerState);	
+
+	matRock->AddTextureSRV(0, woodTableResource);
+	matRock->AddSampler(0, samplerState);
 
 	// Load Meshes
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>("Cube", FixPath(L"../../Assets/Meshes/cube.obj").c_str());

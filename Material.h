@@ -2,6 +2,7 @@
 #include <DirectXMath.h>
 #include <d3d11.h>
 #include <wrl/client.h>
+#include "Graphics.h"
 class Material
 {
 	DirectX::XMFLOAT4 colorTint;
@@ -25,5 +26,6 @@ public:
 	void SetPixelShader(Microsoft::WRL::ComPtr<ID3D11PixelShader> ps);
 	void AddTextureSRV(unsigned int slot, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv);
 	void AddSampler(unsigned int slot, Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler);
+	void BindTexturesAndSamplers();
 };
 
