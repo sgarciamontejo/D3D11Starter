@@ -21,6 +21,10 @@ cbuffer ExternalData : register(b0)
     float4 colorTint;
 }
 
+// Example Texture2D and SamplerState definitions in an HLSL pixel shader
+Texture2D SurfaceColor : register(t0); // A texture assigned to texture slot 0
+SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 0
+
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
 // 

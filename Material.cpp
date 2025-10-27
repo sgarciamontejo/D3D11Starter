@@ -33,3 +33,20 @@ void Material::SetVertexShader(Microsoft::WRL::ComPtr<ID3D11VertexShader> vs) {
 void Material::SetPixelShader(Microsoft::WRL::ComPtr<ID3D11PixelShader> ps) {
 	this->ps = ps;
 }
+
+void Material::AddTextureSRV(unsigned int slot, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv)
+{
+	textureSRVs[slot] = srv;
+}
+
+void Material::AddSampler(unsigned int slot, Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler)
+{
+	samplers[slot] = sampler;
+}
+
+void Material::BindTexturesAndSamplers()
+{
+	for (int i = 0; i < textureSRVs.size) {
+		Graphics::Context->PSSetShaderResources(tex)
+	}
+}

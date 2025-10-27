@@ -45,7 +45,7 @@ private:
 	std::shared_ptr<Camera> activeCamera;
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
-	void LoadShaders();
+	//void LoadShaders();
 	void CreateGeometry();
 
 	// Note the usage of ComPtr below

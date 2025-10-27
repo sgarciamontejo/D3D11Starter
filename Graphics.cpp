@@ -272,6 +272,9 @@ void Graphics::ResizeBuffers(unsigned int width, unsigned int height)
 }
 
 // Loads Constant Buffer
+// Author: Chris Cascioli
+// I wasn't sure how to make this function without splitting it up for different shader types,
+// so I used the function from the demo code
 void Graphics::LoadConstantBuffer(void* data, unsigned int size, D3D11_SHADER_TYPE shaderType, unsigned int registerSlot) {
 	// How much space will we actually need?  Each chunk must be
 	// a multiple of 256 bytes.  Performating a basic alignment here.
