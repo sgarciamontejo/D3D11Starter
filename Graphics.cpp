@@ -1,6 +1,8 @@
 #include "Graphics.h"
 #include <dxgi1_6.h>
 
+#include <d3dcompiler.h>
+
 // Tell the drivers to use high-performance GPU in multi-GPU systems (like laptops)
 extern "C"
 {
@@ -21,6 +23,10 @@ namespace Graphics
 
 		D3D_FEATURE_LEVEL featureLevel{};
 
+		// Constant buffer management
+		unsigned int cbHeapSizeInBytes = 0;
+		unsigned int cbHeapOffsetInBytes = 0;
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext1> context1;
 	}
 }
 
@@ -265,6 +271,65 @@ void Graphics::ResizeBuffers(unsigned int width, unsigned int height)
 	SwapChain->GetFullscreenState(&isFullscreen, 0);
 }
 
+// Loads Constant Buffer
+void Graphics::LoadConstantBuffer(void* data, unsigned int size, D3D11_SHADER_TYPE shaderType, unsigned int registerSlot) {
+	// How much space will we actually need?  Each chunk must be
+	// a multiple of 256 bytes.  Performating a basic alignment here.
+	unsigned int reservationSize = (size + 255) / 256 * 256;
+
+	// Does this fit in the remaining space?  If not, loop back to
+	// the beginning of the ring buffer
+	if (cbHeapOffsetInBytes + reservationSize >= cbHeapSizeInBytes)
+		cbHeapOffsetInBytes = 0;
+
+	// Map the buffer, promising not to overwrite any data currently
+	// in use by a call in flight.  This is accomplished with the
+	// MAP_WRITE_NO_OVERWRITE flag below.  This allows us to quickly
+	// update portions of the resource that aren't in use.
+	D3D11_MAPPED_SUBRESOURCE map{};
+	Context->Map(
+		ConstantBufferHeap.Get(),
+		0,
+		D3D11_MAP_WRITE_NO_OVERWRITE, // Must ensure we're not touching memory currently in use!!!
+		0,
+		&map);
+
+	// Write into the proper portion of the buffer
+	void* uploadAddress = reinterpret_cast<void*>((UINT64)map.pData + cbHeapOffsetInBytes);
+	memcpy(uploadAddress, data, size);
+
+	// Unmap to release this portion of the buffer
+	Context->Unmap(ConstantBufferHeap.Get(), 0);
+
+	// Calculate the offset and size as measured in 16-byte constants
+	unsigned int firstConstant = cbHeapOffsetInBytes / 16;
+	unsigned int numConstants = reservationSize / 16;
+
+	// Bind the buffer to the proper pipeline stage
+	switch (shaderType)
+	{
+	case D3D11_VERTEX_SHADER:
+		context1->VSSetConstantBuffers1(
+			registerSlot,
+			1,
+			ConstantBufferHeap.GetAddressOf(),
+			&firstConstant,
+			&numConstants);
+		break;
+
+	case D3D11_PIXEL_SHADER:
+		context1->PSSetConstantBuffers1(
+			registerSlot,
+			1,
+			ConstantBufferHeap.GetAddressOf(),
+			&firstConstant,
+			&numConstants);
+		break;
+	}
+
+	// Offset for the next call
+	cbHeapOffsetInBytes += reservationSize;
+}
 
 // --------------------------------------------------------
 // Prints graphics debug messages waiting in the queue
