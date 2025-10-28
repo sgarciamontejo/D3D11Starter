@@ -74,4 +74,4 @@ private:
 	void UpdateImGui(float deltaTime);
 	void BuildUI();
 	void FillAndBindNextConstantBuffer(void* buffData, unsigned int size, D3D11_SHADER_TYPE shaderType, unsigned int slot);
-}
+};

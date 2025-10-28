@@ -12,7 +12,7 @@
 namespace Graphics
 {
 	// --- GLOBAL VARS ---
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext1> context1;
+	inline Microsoft::WRL::ComPtr<ID3D11DeviceContext1> context1;
 
 	// Primary D3D11 API objects
 	inline Microsoft::WRL::ComPtr<ID3D11Device> Device;

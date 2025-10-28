@@ -196,17 +196,19 @@ void Game::FillAndBindNextConstantBuffer(void* buffData, unsigned int size, D3D1
 
 	Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 	void* uploadAddress = reinterpret_cast<void*>((UINT64)mappedBuffer.pData + cbOffset); // from demo
-	memcpy(uploadAddress, &buffData, sizeof(VertexShaderData));
+	memcpy(uploadAddress, buffData, size);
 	Graphics::Context->Unmap(constBuffer.Get(), 0);
 
 	unsigned int firstConstant = cbOffset / 16;
 	unsigned int numConstants = totalSize / 16;
 
-	if (shaderType == D3D11_VERTEX_SHADER) {
+	switch (shaderType) {
+	case D3D11_VERTEX_SHADER:
 		Graphics::context1->VSSetConstantBuffers1(slot, 1, constBuffer.GetAddressOf(), &firstConstant, &numConstants);
-	}
-	else {
+		break;
+	case D3D11_PIXEL_SHADER:
 		Graphics::context1->PSSetConstantBuffers1(slot, 1, constBuffer.GetAddressOf(), &firstConstant, &numConstants);
+		break;
 	}
 
 	// update offset
@@ -269,11 +271,12 @@ void Game::CreateGeometry()
 	std::shared_ptr<Material> matRock = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, firstPixelShader);
 	
 	// Add Textures and Samplers
+	matWood->AddSampler(0, samplerState);
 	matWood->AddTextureSRV(0, rockWallResource);
-	matWood->AddSampler(0, samplerState);	
-
-	matRock->AddTextureSRV(0, woodTableResource);
+	
 	matRock->AddSampler(0, samplerState);
+	matRock->AddTextureSRV(0, woodTableResource);
+	
 
 	// Load Meshes
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>("Cube", FixPath(L"../../Assets/Meshes/cube.obj").c_str());
@@ -407,6 +410,9 @@ void Game::Draw(float deltaTime, float totalTime)
 	{
 		// loop through entities and draw them
 		for (std::shared_ptr<GameEntity> entity : entities) {
+			// Bind textures and samplers
+			entity->GetMaterial()->BindTexturesAndSamplers();
+
 			// Bind material shaders
 			Graphics::Context->VSSetShader(entity->GetMaterial()->GetVertexShader().Get(), 0, 0);
 			Graphics::Context->PSSetShader(entity->GetMaterial()->GetPixelShader().Get(), 0, 0);
@@ -417,26 +423,27 @@ void Game::Draw(float deltaTime, float totalTime)
 			vsData.world = entity->GetTransform().GetWorldMatrix();
 			vsData.projection = activeCamera->GetProjectionMatrix();
 			vsData.view = activeCamera->GetViewMatrix();
+			FillAndBindNextConstantBuffer(&vsData, sizeof(VertexShaderData), D3D11_VERTEX_SHADER, 0);
 
 			// PS DATA
 			PixelShaderData psData;
 			psData.colorTint = entity->GetMaterial()->GetColorTint();
 			psData.time = totalTime;
+			FillAndBindNextConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
 
-			//D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-			//// map the Vertex Shader cb
+			D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+			// map the Vertex Shader cb
 			//Graphics::Context->Map(vs_constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 			//memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
 			//Graphics::Context->Unmap(vs_constBuffer.Get(), 0);
-			FillAndBindNextConstantBuffer(&vsData, sizeof(VertexShaderData), D3D11_VERTEX_SHADER, 0);
+			
 
 			//// map the Pixel Shader cb
 			//Graphics::Context->Map(ps_constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 			//memcpy(mappedBuffer.pData, &psData, sizeof(psData));
 			//Graphics::Context->Unmap(ps_constBuffer.Get(), 0);
-			FillAndBindNextConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
+			
 
-			entity->GetMaterial()->BindTexturesAndSamplers();
 			entity->Draw();
 		}
 

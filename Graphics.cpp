@@ -163,6 +163,7 @@ HRESULT Graphics::Initialize(unsigned int windowWidth, unsigned int windowHeight
 	debug->QueryInterface(IID_PPV_ARGS(InfoQueue.GetAddressOf()));
 #endif
 
+	Context->QueryInterface<ID3D11DeviceContext1>(context1.GetAddressOf());
 	return S_OK;
 }
 

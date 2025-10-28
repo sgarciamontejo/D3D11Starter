@@ -37,6 +37,6 @@ SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 
 float4 main(VertexToPixel input) : SV_TARGET
 {
     float4 surfaceColor = SurfaceColor.Sample(BasicSampler, input.uv);
-
-	return surfaceColor * colorTint;
+    surfaceColor *= colorTint;
+	return surfaceColor;
 }
