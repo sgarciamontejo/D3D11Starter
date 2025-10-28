@@ -46,7 +46,11 @@ void Material::AddSampler(unsigned int slot, Microsoft::WRL::ComPtr<ID3D11Sample
 
 void Material::BindTexturesAndSamplers()
 {
-	for (int i = 0; i < textureSRVs.size) {
-		Graphics::Context->PSSetShaderResources(tex)
+	for (int i = 0; i < 128; i++) {
+		Graphics::Context->PSSetShaderResources(i, 1, textureSRVs[i].GetAddressOf());
+	}
+
+	for (int i = 0; i < 16; i++) {
+		Graphics::Context->PSSetSamplers(i, 1, samplers[i].GetAddressOf());
 	}
 }

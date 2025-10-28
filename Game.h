@@ -63,11 +63,15 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
 	// Const Buffers
-	Microsoft::WRL::ComPtr<ID3D11Buffer> vs_constBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> ps_constBuffer;
+	//Microsoft::WRL::ComPtr<ID3D11Buffer> vs_constBuffer;
+	//Microsoft::WRL::ComPtr<ID3D11Buffer> ps_constBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> constBuffer;
+
+	unsigned int cbSize = 0;
+	unsigned int cbOffset = 0;
 
 	// Helpers
 	void UpdateImGui(float deltaTime);
 	void BuildUI();
-};
-
+	void FillAndBindNextConstantBuffer(void* buffData, unsigned int size, D3D11_SHADER_TYPE shaderType, unsigned int slot);
+}

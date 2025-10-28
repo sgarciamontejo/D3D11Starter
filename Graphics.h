@@ -12,6 +12,7 @@
 namespace Graphics
 {
 	// --- GLOBAL VARS ---
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext1> context1;
 
 	// Primary D3D11 API objects
 	inline Microsoft::WRL::ComPtr<ID3D11Device> Device;
@@ -21,9 +22,6 @@ namespace Graphics
 	// Rendering buffers
 	inline Microsoft::WRL::ComPtr<ID3D11RenderTargetView> BackBufferRTV;
 	inline Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DepthBufferDSV;
-
-	// Constant buffer
-	inline Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBufferHeap;
 
 	// Debug Layer
 	inline Microsoft::WRL::ComPtr<ID3D11InfoQueue> InfoQueue;

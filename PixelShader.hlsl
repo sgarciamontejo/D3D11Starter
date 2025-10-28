@@ -36,9 +36,7 @@ SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	// Just return the input color
-	// - This color (like most values passing through the rasterizer) is 
-	//   interpolated for each pixel between the corresponding vertices 
-	//   of the triangle we're rendering
-	return colorTint;
+    float4 surfaceColor = SurfaceColor.Sample(BasicSampler, input.uv);
+
+	return surfaceColor * colorTint;
 }

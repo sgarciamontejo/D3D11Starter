@@ -26,26 +26,35 @@ using namespace DirectX;
 // --------------------------------------------------------
 Game::Game()
 {
-	// Create Vertex Shader Constant Buffer
-	// Calculate byte width
-	unsigned int vsSize = sizeof(VertexShaderData);
-	vsSize = (vsSize + 15) / 16 * 16;
+	//// Create Vertex Shader Constant Buffer
+	//// Calculate byte width
+	//unsigned int vsSize = sizeof(VertexShaderData);
+	//vsSize = (vsSize + 15) / 16 * 16;
+	//D3D11_BUFFER_DESC cbDesc = {};
+	//cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	//cbDesc.ByteWidth = vsSize;
+	//cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	//cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	//Graphics::Device->CreateBuffer(&cbDesc, 0, vs_constBuffer.GetAddressOf());
+
+	//// Create Pixel Shader Constant Buffer
+	//unsigned int psSize = sizeof(PixelShaderData);
+	//psSize = (psSize + 15) / 16 * 16;
+	//D3D11_BUFFER_DESC ps_cbDesc = {};
+	//ps_cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	//ps_cbDesc.ByteWidth = psSize;
+	//ps_cbDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+	//ps_cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	//Graphics::Device->CreateBuffer(&ps_cbDesc, 0, ps_constBuffer.GetAddressOf());
+
+	// Create ring buffer
+	cbSize = ((256 * 1000) + 255) / 256 * 256; // 1000 chunks of 256 bytes
 	D3D11_BUFFER_DESC cbDesc = {};
 	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.ByteWidth = vsSize;
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbDesc.ByteWidth = cbSize;
+	cbDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	Graphics::Device->CreateBuffer(&cbDesc, 0, vs_constBuffer.GetAddressOf());
-
-	// Create Pixel Shader Constant Buffer
-	unsigned int psSize = sizeof(PixelShaderData);
-	psSize = (psSize + 15) / 16 * 16;
-	D3D11_BUFFER_DESC ps_cbDesc = {};
-	ps_cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	ps_cbDesc.ByteWidth = psSize;
-	ps_cbDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
-	ps_cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	Graphics::Device->CreateBuffer(&ps_cbDesc, 0, ps_constBuffer.GetAddressOf());
+	Graphics::Device->CreateBuffer(&cbDesc, 0, constBuffer.GetAddressOf());
 
 	// Initialize ImGui itself & platform/renderer backends
 	IMGUI_CHECKVERSION();
@@ -125,8 +134,8 @@ Game::Game()
 		//Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
 
 		// Set Const Buffer
-		Graphics::Context->VSSetConstantBuffers(0, 1, vs_constBuffer.GetAddressOf());
-		Graphics::Context->PSSetConstantBuffers(0, 1, ps_constBuffer.GetAddressOf());
+		//Graphics::Context->VSSetConstantBuffers(0, 1, vs_constBuffer.GetAddressOf());
+		//Graphics::Context->PSSetConstantBuffers(0, 1, ps_constBuffer.GetAddressOf());
 	}
 }
 
@@ -176,6 +185,33 @@ Microsoft::WRL::ComPtr<ID3D11PixelShader> LoadPixelShader(std::wstring filePath)
 	return shader;
 }
 
+// Load Constant Buffer
+void Game::FillAndBindNextConstantBuffer(void* buffData, unsigned int size, D3D11_SHADER_TYPE shaderType, unsigned int slot) {
+	unsigned int totalSize = (size + 255) / 256 * 256;
+	if (cbOffset + totalSize >= cbSize) {
+		cbOffset = 0;
+	}
+
+	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+
+	Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+	void* uploadAddress = reinterpret_cast<void*>((UINT64)mappedBuffer.pData + cbOffset); // from demo
+	memcpy(uploadAddress, &buffData, sizeof(VertexShaderData));
+	Graphics::Context->Unmap(constBuffer.Get(), 0);
+
+	unsigned int firstConstant = cbOffset / 16;
+	unsigned int numConstants = totalSize / 16;
+
+	if (shaderType == D3D11_VERTEX_SHADER) {
+		Graphics::context1->VSSetConstantBuffers1(slot, 1, constBuffer.GetAddressOf(), &firstConstant, &numConstants);
+	}
+	else {
+		Graphics::context1->PSSetConstantBuffers1(slot, 1, constBuffer.GetAddressOf(), &firstConstant, &numConstants);
+	}
+
+	// update offset
+	cbOffset += totalSize;
+}
 
 // --------------------------------------------------------
 // Creates the geometry we're going to draw
@@ -254,10 +290,10 @@ void Game::CreateGeometry()
 
 	std::shared_ptr<GameEntity> cube1 = std::make_shared<GameEntity>(cube, matNormals);
 	std::shared_ptr<GameEntity> cube2 = std::make_shared<GameEntity>(cube, matUV);
-	std::shared_ptr<GameEntity> cube3 = std::make_shared<GameEntity>(cube, matWhite);
+	std::shared_ptr<GameEntity> cube3 = std::make_shared<GameEntity>(cube, matWood);
 	std::shared_ptr<GameEntity> cylinder1 = std::make_shared<GameEntity>(cylinder, matNormals);
 	std::shared_ptr<GameEntity> cylinder2 = std::make_shared<GameEntity>(cylinder, matUV);
-	std::shared_ptr<GameEntity> cylinder3 = std::make_shared<GameEntity>(cylinder, matRed);
+	std::shared_ptr<GameEntity> cylinder3 = std::make_shared<GameEntity>(cylinder, matRock);
 	std::shared_ptr<GameEntity> helix1 = std::make_shared<GameEntity>(helix, matNormals);
 	std::shared_ptr<GameEntity> helix2 = std::make_shared<GameEntity>(helix, matUV);
 	std::shared_ptr<GameEntity> helix3 = std::make_shared<GameEntity>(helix, matPurple);
@@ -392,14 +428,15 @@ void Game::Draw(float deltaTime, float totalTime)
 			//Graphics::Context->Map(vs_constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 			//memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
 			//Graphics::Context->Unmap(vs_constBuffer.Get(), 0);
-			Graphics::LoadConstantBuffer(&vsData, sizeof(VertexShaderData), D3D11_VERTEX_SHADER, 0);
+			FillAndBindNextConstantBuffer(&vsData, sizeof(VertexShaderData), D3D11_VERTEX_SHADER, 0);
 
 			//// map the Pixel Shader cb
 			//Graphics::Context->Map(ps_constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 			//memcpy(mappedBuffer.pData, &psData, sizeof(psData));
 			//Graphics::Context->Unmap(ps_constBuffer.Get(), 0);
-			Graphics::LoadConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
+			FillAndBindNextConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
 
+			entity->GetMaterial()->BindTexturesAndSamplers();
 			entity->Draw();
 		}
 
