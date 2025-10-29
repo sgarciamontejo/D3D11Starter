@@ -19,6 +19,8 @@ struct VertexToPixel
 cbuffer ExternalData : register(b0)
 {
     float4 colorTint;
+    float2 uvScale;
+    float2 uvOffset;
 }
 
 // Example Texture2D and SamplerState definitions in an HLSL pixel shader
@@ -36,7 +38,8 @@ SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-    float4 surfaceColor = SurfaceColor.Sample(BasicSampler, input.uv);
+    input.uv = input.uv * uvScale + uvOffset;
+    float3 surfaceColor = SurfaceColor.Sample(BasicSampler, input.uv).rgb;
     surfaceColor *= colorTint;
-	return surfaceColor;
+    return float4(surfaceColor, 1);
 }

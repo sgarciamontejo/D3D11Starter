@@ -54,8 +54,8 @@ private:
 	//  - More info here: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
 
 	// Buffers to hold actual geometry data
-	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
+	/*Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;*/
 
 	// Shaders and shader-related constructs
 	//Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
@@ -65,13 +65,10 @@ private:
 	// Const Buffers
 	//Microsoft::WRL::ComPtr<ID3D11Buffer> vs_constBuffer;
 	//Microsoft::WRL::ComPtr<ID3D11Buffer> ps_constBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constBuffer;
 
-	unsigned int cbSize = 0;
-	unsigned int cbOffset = 0;
+	std::vector<std::shared_ptr<Material>> materials;
 
 	// Helpers
 	void UpdateImGui(float deltaTime);
 	void BuildUI();
-	void FillAndBindNextConstantBuffer(void* buffData, unsigned int size, D3D11_SHADER_TYPE shaderType, unsigned int slot);
 };

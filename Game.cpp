@@ -47,15 +47,6 @@ Game::Game()
 	//ps_cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 	//Graphics::Device->CreateBuffer(&ps_cbDesc, 0, ps_constBuffer.GetAddressOf());
 
-	// Create ring buffer
-	cbSize = ((256 * 1000) + 255) / 256 * 256; // 1000 chunks of 256 bytes
-	D3D11_BUFFER_DESC cbDesc = {};
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.ByteWidth = cbSize;
-	cbDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	Graphics::Device->CreateBuffer(&cbDesc, 0, constBuffer.GetAddressOf());
-
 	// Initialize ImGui itself & platform/renderer backends
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -82,6 +73,9 @@ Game::Game()
 	//  - Some of these, like the primitive topology & input layout, probably won't change
 	//  - Others, like setting shaders, will need to be moved elsewhere later
 	{
+		// Create ring buffer
+		Graphics::ResizeConstantBufferHeap(256 * 1000);
+
 		// Tell the input assembler (IA) stage of the pipeline what kind of
 		// geometric primitives (points, lines or triangles) we want to draw.  
 		// Essentially: "What kind of shape should the GPU draw with our vertices?"
@@ -155,65 +149,35 @@ Game::~Game()
 }
 
 
-Microsoft::WRL::ComPtr<ID3D11VertexShader> LoadVertexShader(std::wstring filePath) {
-	ID3DBlob* vertexShaderBlob;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> shader;
-
-	D3DReadFileToBlob(FixPath(filePath).c_str(), &vertexShaderBlob);
-	Graphics::Device->CreateVertexShader(
-		vertexShaderBlob->GetBufferPointer(),	// Pointer to start of binary data
-		vertexShaderBlob->GetBufferSize(),		// How big is the data
-		0,										// No classes in the shader
-		shader.GetAddressOf()					// ID3D11VertexShader**
-	);
-
-	return shader;
-}
-
-Microsoft::WRL::ComPtr<ID3D11PixelShader> LoadPixelShader(std::wstring filePath) {
-	ID3DBlob* pixelShaderBlob;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> shader;
-
-	D3DReadFileToBlob(FixPath(filePath).c_str(), &pixelShaderBlob);
-	Graphics::Device->CreatePixelShader(
-		pixelShaderBlob->GetBufferPointer(),	// Pointer to start of binary data
-		pixelShaderBlob->GetBufferSize(),		// How big is the data
-		0,										// No classes in the shader
-		shader.GetAddressOf()					// ID3D11PixelShader**
-	);
-	
-	return shader;
-}
-
-// Load Constant Buffer
-void Game::FillAndBindNextConstantBuffer(void* buffData, unsigned int size, D3D11_SHADER_TYPE shaderType, unsigned int slot) {
-	unsigned int totalSize = (size + 255) / 256 * 256;
-	if (cbOffset + totalSize >= cbSize) {
-		cbOffset = 0;
-	}
-
-	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-
-	Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-	void* uploadAddress = reinterpret_cast<void*>((UINT64)mappedBuffer.pData + cbOffset); // from demo
-	memcpy(uploadAddress, buffData, size);
-	Graphics::Context->Unmap(constBuffer.Get(), 0);
-
-	unsigned int firstConstant = cbOffset / 16;
-	unsigned int numConstants = totalSize / 16;
-
-	switch (shaderType) {
-	case D3D11_VERTEX_SHADER:
-		Graphics::context1->VSSetConstantBuffers1(slot, 1, constBuffer.GetAddressOf(), &firstConstant, &numConstants);
-		break;
-	case D3D11_PIXEL_SHADER:
-		Graphics::context1->PSSetConstantBuffers1(slot, 1, constBuffer.GetAddressOf(), &firstConstant, &numConstants);
-		break;
-	}
-
-	// update offset
-	cbOffset += totalSize;
-}
+//Microsoft::WRL::ComPtr<ID3D11VertexShader> LoadVertexShader(std::wstring filePath) {
+//	ID3DBlob* vertexShaderBlob;
+//	Microsoft::WRL::ComPtr<ID3D11VertexShader> shader;
+//
+//	D3DReadFileToBlob(FixPath(filePath).c_str(), &vertexShaderBlob);
+//	Graphics::Device->CreateVertexShader(
+//		vertexShaderBlob->GetBufferPointer(),	// Pointer to start of binary data
+//		vertexShaderBlob->GetBufferSize(),		// How big is the data
+//		0,										// No classes in the shader
+//		shader.GetAddressOf()					// ID3D11VertexShader**
+//	);
+//
+//	return shader;
+//}
+//
+//Microsoft::WRL::ComPtr<ID3D11PixelShader> LoadPixelShader(std::wstring filePath) {
+//	ID3DBlob* pixelShaderBlob;
+//	Microsoft::WRL::ComPtr<ID3D11PixelShader> shader;
+//
+//	D3DReadFileToBlob(FixPath(filePath).c_str(), &pixelShaderBlob);
+//	Graphics::Device->CreatePixelShader(
+//		pixelShaderBlob->GetBufferPointer(),	// Pointer to start of binary data
+//		pixelShaderBlob->GetBufferSize(),		// How big is the data
+//		0,										// No classes in the shader
+//		shader.GetAddressOf()					// ID3D11PixelShader**
+//	);
+//	
+//	return shader;
+//}
 
 // --------------------------------------------------------
 // Creates the geometry we're going to draw
@@ -247,36 +211,43 @@ void Game::CreateGeometry()
 	// Load Textures
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockWallResource;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodTableResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> crackedWallResource;
 
 	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/Rock Wall/rock_wall_15_diff_4k.jpg").c_str(), 0, rockWallResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/Cracks.jpg").c_str(), 0, crackedWallResource.GetAddressOf());
 	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/Wooden Table/wood_table_diff_4k.jpg").c_str(), 0, woodTableResource.GetAddressOf());
 
 	// Load Shaders
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> firstVertexShader = LoadVertexShader(L"VertexShader.cso");
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> firstPixelShader = LoadPixelShader(L"PixelShader.cso");
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> uvPixelShader = LoadPixelShader(L"DebugUVsPS.cso");
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> firstVertexShader = Graphics::LoadVertexShader(FixPath(L"VertexShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> firstPixelShader = Graphics::LoadPixelShader(FixPath(L"PixelShader.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> comboPixelShader = Graphics::LoadPixelShader(FixPath(L"ComboPS.cso").c_str());
+	/*Microsoft::WRL::ComPtr<ID3D11PixelShader> uvPixelShader = LoadPixelShader(L"DebugUVsPS.cso");
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> normalsPixelShader = LoadPixelShader(L"DebugNormalsPS.cso");
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> customPixelShader = LoadPixelShader(L"CustomPS.cso");
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> customPixelShader = LoadPixelShader(L"CustomPS.cso");*/
 
 	// Create Materials
-	std::shared_ptr<Material> matRed = std::make_shared<Material>(red, firstVertexShader, firstPixelShader);
-	std::shared_ptr<Material> matWhite = std::make_shared<Material>(white, firstVertexShader, firstPixelShader);
-	std::shared_ptr<Material> matPurple = std::make_shared<Material>(purple, firstVertexShader, firstPixelShader);
+	//std::shared_ptr<Material> matRed = std::make_shared<Material>("Red", red, firstVertexShader, firstPixelShader);
+	//std::shared_ptr<Material> matWhite = std::make_shared<Material>("White", white, firstVertexShader, firstPixelShader);
+	//std::shared_ptr<Material> matPurple = std::make_shared<Material>("Purple", purple, firstVertexShader, firstPixelShader);
 
-	std::shared_ptr<Material> matUV = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, uvPixelShader);
-	std::shared_ptr<Material> matNormals = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, normalsPixelShader);
-	std::shared_ptr<Material> matCustom = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, customPixelShader);
+	//std::shared_ptr<Material> matUV = std::make_shared<Material>("UV", XMFLOAT4(1, 1, 1, 1), firstVertexShader, uvPixelShader);
+	//std::shared_ptr<Material> matNormals = std::make_shared<Material>("Normals", XMFLOAT4(1, 1, 1, 1), firstVertexShader, normalsPixelShader);
+	//std::shared_ptr<Material> matCustom = std::make_shared<Material>("Custom", XMFLOAT4(1, 1, 1, 1), firstVertexShader, customPixelShader);
 
-	std::shared_ptr<Material> matWood = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, firstPixelShader);
-	std::shared_ptr<Material> matRock = std::make_shared<Material>(XMFLOAT4(1,1,1,1), firstVertexShader, firstPixelShader);
-	
-	// Add Textures and Samplers
+	std::shared_ptr<Material> matWood = std::make_shared<Material>("Wood", XMFLOAT4(1, 1, 1, 1), firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
 	matWood->AddSampler(0, samplerState);
-	matWood->AddTextureSRV(0, rockWallResource);
-	
+	matWood->AddTextureSRV(0, woodTableResource);
+
+	std::shared_ptr<Material> matRock = std::make_shared<Material>("Rock", XMFLOAT4(1, 1, 1, 1), firstVertexShader, firstPixelShader, XMFLOAT2(1,1), XMFLOAT2(0, 0));
 	matRock->AddSampler(0, samplerState);
-	matRock->AddTextureSRV(0, woodTableResource);
-	
+	matRock->AddTextureSRV(0, rockWallResource);
+
+	std::shared_ptr<Material> matCrackedRock = std::make_shared<Material>("Cracked Rock", XMFLOAT4(1, 1, 1, 1), firstVertexShader, comboPixelShader, XMFLOAT2(2,2), XMFLOAT2(0, 0));
+	matCrackedRock->AddSampler(0, samplerState);
+	matCrackedRock->AddTextureSRV(0, rockWallResource);
+	matCrackedRock->AddTextureSRV(1, crackedWallResource);
+		
+	materials.insert(materials.end(), { matRock, matWood, matCrackedRock });
 
 	// Load Meshes
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>("Cube", FixPath(L"../../Assets/Meshes/cube.obj").c_str());
@@ -291,70 +262,70 @@ void Game::CreateGeometry()
 	meshes.insert(meshes.end(), { cube, cylinder, helix, quad, quad_double_sided, sphere, torus });
 
 
-	std::shared_ptr<GameEntity> cube1 = std::make_shared<GameEntity>(cube, matNormals);
-	std::shared_ptr<GameEntity> cube2 = std::make_shared<GameEntity>(cube, matUV);
+	//std::shared_ptr<GameEntity> cube1 = std::make_shared<GameEntity>(cube, matNormals);
+	//std::shared_ptr<GameEntity> cube2 = std::make_shared<GameEntity>(cube, matUV);
 	std::shared_ptr<GameEntity> cube3 = std::make_shared<GameEntity>(cube, matWood);
-	std::shared_ptr<GameEntity> cylinder1 = std::make_shared<GameEntity>(cylinder, matNormals);
-	std::shared_ptr<GameEntity> cylinder2 = std::make_shared<GameEntity>(cylinder, matUV);
-	std::shared_ptr<GameEntity> cylinder3 = std::make_shared<GameEntity>(cylinder, matRock);
-	std::shared_ptr<GameEntity> helix1 = std::make_shared<GameEntity>(helix, matNormals);
-	std::shared_ptr<GameEntity> helix2 = std::make_shared<GameEntity>(helix, matUV);
-	std::shared_ptr<GameEntity> helix3 = std::make_shared<GameEntity>(helix, matPurple);
-	std::shared_ptr<GameEntity> sphere1 = std::make_shared<GameEntity>(sphere, matNormals);
-	std::shared_ptr<GameEntity> sphere2 = std::make_shared<GameEntity>(sphere, matUV);
-	std::shared_ptr<GameEntity> sphere3 = std::make_shared<GameEntity>(sphere, matCustom);
-	std::shared_ptr<GameEntity> torus1 = std::make_shared<GameEntity>(torus, matNormals);
-	std::shared_ptr<GameEntity> torus2 = std::make_shared<GameEntity>(torus, matUV);
-	std::shared_ptr<GameEntity> torus3 = std::make_shared<GameEntity>(torus, matPurple);
-	std::shared_ptr<GameEntity> quad1 = std::make_shared<GameEntity>(quad, matNormals);
-	std::shared_ptr<GameEntity> quad2 = std::make_shared<GameEntity>(quad, matUV);
-	std::shared_ptr<GameEntity> quad3 = std::make_shared<GameEntity>(quad, matRed);
-	std::shared_ptr<GameEntity> quad_double_sided1 = std::make_shared<GameEntity>(quad_double_sided, matNormals);
-	std::shared_ptr<GameEntity> quad_double_sided2 = std::make_shared<GameEntity>(quad_double_sided, matUV);
-	std::shared_ptr<GameEntity> quad_double_sided3 = std::make_shared<GameEntity>(quad_double_sided, matWhite);
+	//std::shared_ptr<GameEntity> cylinder1 = std::make_shared<GameEntity>(cylinder, matNormals);
+	//std::shared_ptr<GameEntity> cylinder2 = std::make_shared<GameEntity>(cylinder, matUV);
+	std::shared_ptr<GameEntity> cylinder3 = std::make_shared<GameEntity>(cylinder, matCrackedRock);
+	//std::shared_ptr<GameEntity> helix1 = std::make_shared<GameEntity>(helix, matNormals);
+	//std::shared_ptr<GameEntity> helix2 = std::make_shared<GameEntity>(helix, matUV);
+	std::shared_ptr<GameEntity> helix3 = std::make_shared<GameEntity>(helix, matWood);
+	//std::shared_ptr<GameEntity> sphere1 = std::make_shared<GameEntity>(sphere, matNormals);
+	//std::shared_ptr<GameEntity> sphere2 = std::make_shared<GameEntity>(sphere, matUV);
+	std::shared_ptr<GameEntity> sphere3 = std::make_shared<GameEntity>(sphere, matRock);
+	//std::shared_ptr<GameEntity> torus1 = std::make_shared<GameEntity>(torus, matNormals);
+	//std::shared_ptr<GameEntity> torus2 = std::make_shared<GameEntity>(torus, matUV);
+	std::shared_ptr<GameEntity> torus3 = std::make_shared<GameEntity>(torus, matWood);
+	//std::shared_ptr<GameEntity> quad1 = std::make_shared<GameEntity>(quad, matNormals);
+	//std::shared_ptr<GameEntity> quad2 = std::make_shared<GameEntity>(quad, matUV);
+	std::shared_ptr<GameEntity> quad3 = std::make_shared<GameEntity>(quad, matRock);
+	//std::shared_ptr<GameEntity> quad_double_sided1 = std::make_shared<GameEntity>(quad_double_sided, matNormals);
+	//std::shared_ptr<GameEntity> quad_double_sided2 = std::make_shared<GameEntity>(quad_double_sided, matUV);
+	std::shared_ptr<GameEntity> quad_double_sided3 = std::make_shared<GameEntity>(quad_double_sided, matWood);
 
-	cube1->GetTransform().MoveAbsolute(15.0f, 5.0f, -10.0f);
-	cube2->GetTransform().MoveAbsolute(15.0f, 0.0f, -10.0f);
+	//cube1->GetTransform().MoveAbsolute(15.0f, 5.0f, -10.0f);
+	//cube2->GetTransform().MoveAbsolute(15.0f, 0.0f, -10.0f);
 	cube3->GetTransform().MoveAbsolute(15.0f, -5.0f, -10.0f);
-	cylinder1->GetTransform().MoveAbsolute(10.0f, 5.0f, -10.0f);
-	cylinder2->GetTransform().MoveAbsolute(10.0f, 0.0f, -10.0f);
+	//cylinder1->GetTransform().MoveAbsolute(10.0f, 5.0f, -10.0f);
+	//cylinder2->GetTransform().MoveAbsolute(10.0f, 0.0f, -10.0f);
 	cylinder3->GetTransform().MoveAbsolute(10.0f, -5.0f, -10.0f);
-	helix1->GetTransform().MoveAbsolute(5.0f, 5.0f, -10.0f);
-	helix2->GetTransform().MoveAbsolute(5.0f, 0.0f, -10.0f);
+	//helix1->GetTransform().MoveAbsolute(5.0f, 5.0f, -10.0f);
+	//helix2->GetTransform().MoveAbsolute(5.0f, 0.0f, -10.0f);
 	helix3->GetTransform().MoveAbsolute(5.0f, -5.0f, -10.0f);
-	sphere1->GetTransform().MoveAbsolute(0.0f, 5.0f, -10.0f);
-	sphere2->GetTransform().MoveAbsolute(0.0f, 0.0f, -10.0f);
+	//sphere1->GetTransform().MoveAbsolute(0.0f, 5.0f, -10.0f);
+	//sphere2->GetTransform().MoveAbsolute(0.0f, 0.0f, -10.0f);
 	sphere3->GetTransform().MoveAbsolute(0.0f, -5.0f, -10.0f);
-	torus1->GetTransform().MoveAbsolute(-5.0f, 5.0f, -10.0f);
-	torus2->GetTransform().MoveAbsolute(-5.0f, 0.0f, -10.0f);
+	//torus1->GetTransform().MoveAbsolute(-5.0f, 5.0f, -10.0f);
+	//torus2->GetTransform().MoveAbsolute(-5.0f, 0.0f, -10.0f);
 	torus3->GetTransform().MoveAbsolute(-5.0f, -5.0f, -10.0f);
-	quad1->GetTransform().MoveAbsolute(-10.0f, 5.0f, -10.0f);
-	quad2->GetTransform().MoveAbsolute(-10.0f, 0.0f, -10.0f);
+	//quad1->GetTransform().MoveAbsolute(-10.0f, 5.0f, -10.0f);
+	//quad2->GetTransform().MoveAbsolute(-10.0f, 0.0f, -10.0f);
 	quad3->GetTransform().MoveAbsolute(-10.0f, -5.0f, -10.0f);
-	quad_double_sided1->GetTransform().MoveAbsolute(-15.0f, 5.0f, -10.0f);
-	quad_double_sided2->GetTransform().MoveAbsolute(-15.0f, 0.0f, -10.0f);
+	//quad_double_sided1->GetTransform().MoveAbsolute(-15.0f, 5.0f, -10.0f);
+	//quad_double_sided2->GetTransform().MoveAbsolute(-15.0f, 0.0f, -10.0f);
 	quad_double_sided3->GetTransform().MoveAbsolute(-15.0f, -5.0f, -10.0f);
 
-	entities.push_back(cube1);
-	entities.push_back(cube2);
+	//entities.push_back(cube1);
+	//entities.push_back(cube2);
 	entities.push_back(cube3);
-	entities.push_back(cylinder1);
-	entities.push_back(cylinder2);
+	//entities.push_back(cylinder1);
+	//entities.push_back(cylinder2);
 	entities.push_back(cylinder3);
-	entities.push_back(helix1);
-	entities.push_back(helix2);
+	//entities.push_back(helix1);
+	//entities.push_back(helix2);
 	entities.push_back(helix3);
-	entities.push_back(quad1);
-	entities.push_back(quad2);
+	//entities.push_back(quad1);
+	//entities.push_back(quad2);
 	entities.push_back(quad3);
-	entities.push_back(quad_double_sided1);
-	entities.push_back(quad_double_sided2);
+	//entities.push_back(quad_double_sided1);
+	//entities.push_back(quad_double_sided2);
 	entities.push_back(quad_double_sided3);
-	entities.push_back(sphere1);
-	entities.push_back(sphere2);
+	//entities.push_back(sphere1);
+	//entities.push_back(sphere2);
 	entities.push_back(sphere3);
-	entities.push_back(torus1);
-	entities.push_back(torus2);
+	//entities.push_back(torus1);
+	//entities.push_back(torus2);
 	entities.push_back(torus3);
 }
 
@@ -408,6 +379,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 
 	{
+
 		// loop through entities and draw them
 		for (std::shared_ptr<GameEntity> entity : entities) {
 			// Bind textures and samplers
@@ -423,20 +395,20 @@ void Game::Draw(float deltaTime, float totalTime)
 			vsData.world = entity->GetTransform().GetWorldMatrix();
 			vsData.projection = activeCamera->GetProjectionMatrix();
 			vsData.view = activeCamera->GetViewMatrix();
-			FillAndBindNextConstantBuffer(&vsData, sizeof(VertexShaderData), D3D11_VERTEX_SHADER, 0);
+			Graphics::FillAndBindNextConstantBuffer(&vsData, sizeof(VertexShaderData), D3D11_VERTEX_SHADER, 0);
 
 			// PS DATA
 			PixelShaderData psData;
 			psData.colorTint = entity->GetMaterial()->GetColorTint();
-			psData.time = totalTime;
-			FillAndBindNextConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
+			psData.uvScale = entity->GetMaterial()->GetUVScale();
+			psData.uvOffset = entity->GetMaterial()->GetUVOffset();
+			Graphics::FillAndBindNextConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
 
-			D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+			//D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
 			// map the Vertex Shader cb
 			//Graphics::Context->Map(vs_constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
 			//memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
 			//Graphics::Context->Unmap(vs_constBuffer.Get(), 0);
-			
 
 			//// map the Pixel Shader cb
 			//Graphics::Context->Map(ps_constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
@@ -520,6 +492,29 @@ void Game::BuildUI() {
 				ImGui::Text("\tTriangles: %d", meshes[i]->GetIndexCount() / 3);
 				ImGui::Text("\tVertices: %d", meshes[i]->GetVertexCount());
 				ImGui::Text("\tIndices: %d", meshes[i]->GetIndexCount());
+				ImGui::TreePop();
+			}
+		}
+		// close node tree
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("Materials"))
+	{
+		for (int i = 0; i < materials.size(); i++) {
+			if (ImGui::TreeNode(materials[i]->GetName())) {
+				XMFLOAT4 tint = materials[i]->GetColorTint();
+				XMFLOAT2 scale = materials[i]->GetUVScale();
+				XMFLOAT2 offset = materials[i]->GetUVOffset();
+
+				if (ImGui::DragFloat4("\tColor Tint", &tint.x, 0.01f, 0.0f, 1.0f)) materials[i]->SetColorTint(tint);
+				if (ImGui::DragFloat2("\tUV Scale", &scale.x, 0.5f, 0.0f, 10.0f)) materials[i]->SetUVScale(scale);
+				if (ImGui::DragFloat2("\tUV OFfset", &offset.x, 0.05f, 0.0f, 10.0f)) materials[i]->SetUVOffset(offset);
+				
+				for(auto& tex : materials[i]->GetTextureSRVs()) {
+					ImGui::Text("\n\tTexture Slot %d", tex.first);
+					ImGui::Image(tex.second.Get(), ImVec2(256, 256));
+				}
+
 				ImGui::TreePop();
 			}
 		}

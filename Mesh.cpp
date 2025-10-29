@@ -299,6 +299,9 @@ void Mesh::CreateBuffers(Vertex* vertices, int numVertices, unsigned int* indice
 		// Actually create the buffer on the GPU with the initial data
 		// - Once we do this, we'll NEVER CHANGE DATA IN THE BUFFER AGAIN
 		Graphics::Device->CreateBuffer(&vbd, &initialVertexData, vb.GetAddressOf());
+
+		this->numIndices = (unsigned int)numIndices;
+		this->numVertices = (unsigned int)numVertices;
 	}
 
 	// Create an INDEX BUFFER

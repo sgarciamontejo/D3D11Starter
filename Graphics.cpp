@@ -22,6 +22,10 @@ namespace Graphics
 		BOOL isFullscreen = false;
 
 		D3D_FEATURE_LEVEL featureLevel{};
+
+		unsigned int cbSize = 0;
+		unsigned int cbOffset = 0;
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext1> context1;
 	}
 }
 
@@ -267,67 +271,88 @@ void Graphics::ResizeBuffers(unsigned int width, unsigned int height)
 	SwapChain->GetFullscreenState(&isFullscreen, 0);
 }
 
-// Loads Constant Buffer
-// Author: Chris Cascioli
-// I wasn't sure how to make this function without splitting it up for different shader types,
-// so I used the function from the demo code
-void Graphics::LoadConstantBuffer(void* data, unsigned int size, D3D11_SHADER_TYPE shaderType, unsigned int registerSlot) {
-	//// How much space will we actually need?  Each chunk must be
-	//// a multiple of 256 bytes.  Performating a basic alignment here.
-	//unsigned int reservationSize = (size + 255) / 256 * 256;
+Microsoft::WRL::ComPtr<ID3D11VertexShader> Graphics::LoadVertexShader(const wchar_t* filePath) {
+	ID3DBlob* vertexShaderBlob;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> shader;
 
-	//// Does this fit in the remaining space?  If not, loop back to
-	//// the beginning of the ring buffer
-	//if (cbHeapOffsetInBytes + reservationSize >= cbHeapSizeInBytes)
-	//	cbHeapOffsetInBytes = 0;
+	D3DReadFileToBlob(filePath, &vertexShaderBlob);
+	Graphics::Device->CreateVertexShader(
+		vertexShaderBlob->GetBufferPointer(),	// Pointer to start of binary data
+		vertexShaderBlob->GetBufferSize(),		// How big is the data
+		0,										// No classes in the shader
+		shader.GetAddressOf()					// ID3D11VertexShader**
+	);
 
-	//// Map the buffer, promising not to overwrite any data currently
-	//// in use by a call in flight.  This is accomplished with the
-	//// MAP_WRITE_NO_OVERWRITE flag below.  This allows us to quickly
-	//// update portions of the resource that aren't in use.
-	//D3D11_MAPPED_SUBRESOURCE map{};
-	//Context->Map(
-	//	ConstantBufferHeap.Get(),
-	//	0,
-	//	D3D11_MAP_WRITE_NO_OVERWRITE, // Must ensure we're not touching memory currently in use!!!
-	//	0,
-	//	&map);
+	return shader;
+}
 
-	//// Write into the proper portion of the buffer
-	//void* uploadAddress = reinterpret_cast<void*>((UINT64)map.pData + cbHeapOffsetInBytes);
-	//memcpy(uploadAddress, data, size);
+Microsoft::WRL::ComPtr<ID3D11PixelShader> Graphics::LoadPixelShader(const wchar_t* filePath) {
+	ID3DBlob* pixelShaderBlob;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> shader;
 
-	//// Unmap to release this portion of the buffer
-	//Context->Unmap(ConstantBufferHeap.Get(), 0);
+	D3DReadFileToBlob(filePath, &pixelShaderBlob);
+	Graphics::Device->CreatePixelShader(
+		pixelShaderBlob->GetBufferPointer(),	// Pointer to start of binary data
+		pixelShaderBlob->GetBufferSize(),		// How big is the data
+		0,										// No classes in the shader
+		shader.GetAddressOf()					// ID3D11PixelShader**
+	);
+	
+	return shader;
+}
 
-	//// Calculate the offset and size as measured in 16-byte constants
-	//unsigned int firstConstant = cbHeapOffsetInBytes / 16;
-	//unsigned int numConstants = reservationSize / 16;
+void Graphics::ResizeConstantBufferHeap(unsigned int sizeInBytes)
+{
+	// Ensure graphics API is initialized
+	if (!apiInitialized)
+		return;
 
-	//// Bind the buffer to the proper pipeline stage
-	//switch (shaderType)
-	//{
-	//case D3D11_VERTEX_SHADER:
-	//	context1->VSSetConstantBuffers(
-	//		registerSlot,
-	//		1,
-	//		ConstantBufferHeap.GetAddressOf(),
-	//		&firstConstant,
-	//		&numConstants);
-	//	break;
+	// Resets the ComPtr, releasing any existing references
+	constBuffer.Reset();
 
-	//case D3D11_PIXEL_SHADER:
-	//	context1->PSSetConstantBuffers(
-	//		registerSlot,
-	//		1,
-	//		ConstantBufferHeap.GetAddressOf(),
-	//		&firstConstant,
-	//		&numConstants);
-	//	break;
-	//}
+	// Set up basic size tracking details
+	cbOffset = 0;
+	cbSize = (sizeInBytes + 255) / 256 * 256;
 
-	//// Offset for the next call
-	//cbHeapOffsetInBytes += reservationSize;
+	// Create the actual buffer
+	D3D11_BUFFER_DESC cbDesc{};
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.ByteWidth = cbSize;
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbDesc.MiscFlags = 0;
+	cbDesc.StructureByteStride = 0;
+	Device->CreateBuffer(&cbDesc, 0, constBuffer.GetAddressOf());
+}
+
+//Load constant buffer
+void Graphics::FillAndBindNextConstantBuffer(void* buffData, unsigned int size, D3D11_SHADER_TYPE shaderType, unsigned int slot) {
+	unsigned int totalSize = (size + 255) / 256 * 256;
+	if (cbOffset + totalSize >= cbSize) {
+		cbOffset = 0;
+	}
+
+	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+
+	Graphics::Context->Map(constBuffer.Get(), 0, D3D11_MAP_WRITE_NO_OVERWRITE, 0, &mappedBuffer);
+	void* uploadAddress = reinterpret_cast<void*>((UINT64)mappedBuffer.pData + cbOffset); // from demo
+	memcpy(uploadAddress, buffData, size);
+	Graphics::Context->Unmap(constBuffer.Get(), 0);
+
+	unsigned int firstConstant = cbOffset / 16;
+	unsigned int numConstants = totalSize / 16;
+
+	switch (shaderType) {
+	case D3D11_VERTEX_SHADER:
+		Graphics::context1->VSSetConstantBuffers1(slot, 1, constBuffer.GetAddressOf(), &firstConstant, &numConstants);
+		break;
+	case D3D11_PIXEL_SHADER:
+		Graphics::context1->PSSetConstantBuffers1(slot, 1, constBuffer.GetAddressOf(), &firstConstant, &numConstants);
+		break;
+	}
+
+	// update offset
+	cbOffset += totalSize;
 }
 
 // --------------------------------------------------------

@@ -12,7 +12,6 @@
 namespace Graphics
 {
 	// --- GLOBAL VARS ---
-	inline Microsoft::WRL::ComPtr<ID3D11DeviceContext1> context1;
 
 	// Primary D3D11 API objects
 	inline Microsoft::WRL::ComPtr<ID3D11Device> Device;
@@ -22,6 +21,8 @@ namespace Graphics
 	// Rendering buffers
 	inline Microsoft::WRL::ComPtr<ID3D11RenderTargetView> BackBufferRTV;
 	inline Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DepthBufferDSV;
+
+	inline Microsoft::WRL::ComPtr<ID3D11Buffer> constBuffer;
 
 	// Debug Layer
 	inline Microsoft::WRL::ComPtr<ID3D11InfoQueue> InfoQueue;
@@ -36,8 +37,13 @@ namespace Graphics
 	HRESULT Initialize(unsigned int windowWidth, unsigned int windowHeight, HWND windowHandle, bool vsyncIfPossible);
 	void ShutDown();
 	void ResizeBuffers(unsigned int width, unsigned int height);
-	// Used code from the demo
-	void LoadConstantBuffer(void* data, unsigned int size, D3D11_SHADER_TYPE shaderType, unsigned int registerSlot);
+
+	// Shader loading helpers
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> LoadPixelShader(const wchar_t* compiledShaderPath);
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> LoadVertexShader(const wchar_t* compiledShaderPath);
+
+	void ResizeConstantBufferHeap(unsigned int sizeInBytes);
+	void FillAndBindNextConstantBuffer(void* buffData, unsigned int size, D3D11_SHADER_TYPE shaderType, unsigned int slot);
 
 	// Debug Layer
 	void PrintDebugMessages();
