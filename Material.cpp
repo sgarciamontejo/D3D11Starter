@@ -1,8 +1,9 @@
 #include "Material.h"
 
-Material::Material(const char* name, DirectX::XMFLOAT4 colorTint, Microsoft::WRL::ComPtr<ID3D11VertexShader> vs, Microsoft::WRL::ComPtr<ID3D11PixelShader> ps, DirectX::XMFLOAT2 uvScale, DirectX::XMFLOAT2 uvOffset) {
+Material::Material(const char* name, DirectX::XMFLOAT4 colorTint, float roughness, Microsoft::WRL::ComPtr<ID3D11VertexShader> vs, Microsoft::WRL::ComPtr<ID3D11PixelShader> ps, DirectX::XMFLOAT2 uvScale, DirectX::XMFLOAT2 uvOffset) {
 	this->name = name;
 	this->colorTint = colorTint;
+	this->roughness = roughness;
 	this->vs = vs;
 	this->ps = ps;
 	this->uvScale = uvScale;
@@ -15,6 +16,10 @@ Material::~Material() {
 
 DirectX::XMFLOAT4 Material::GetColorTint() {
 	return colorTint;
+}
+
+float Material::GetRoughness() {
+	return roughness;
 }
 
 DirectX::XMFLOAT2 Material::GetUVScale()
@@ -37,6 +42,10 @@ Microsoft::WRL::ComPtr<ID3D11PixelShader> Material::GetPixelShader() {
 
 void Material::SetColorTint(DirectX::XMFLOAT4 colorTint) {
 	this->colorTint = colorTint;
+}
+
+void Material::SetRoughness(float roughness) {
+	this->roughness = roughness;
 }
 
 void Material::SetUVScale(DirectX::XMFLOAT2 uvScale)

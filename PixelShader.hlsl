@@ -1,26 +1,14 @@
-// Struct representing the data we expect to receive from earlier pipeline stages
-// - Should match the output of our corresponding vertex shader
-// - The name of the struct itself is unimportant
-// - The variable names don't have to match other shaders (just the semantics)
-// - Each variable must have a semantic, which defines its usage
-struct VertexToPixel
-{
-	// Data type
-	//  |
-	//  |   Name          Semantic
-	//  |    |                |
-	//  v    v                v
-	float4 screenPosition	: SV_POSITION;
-    float2 uv				: TEXCOORD;
-    float3 normal			: NORMAL;
-};
+#include "ShaderIncludes.hlsli"
 
 // Constant Buffer
 cbuffer ExternalData : register(b0)
 {
     float4 colorTint;
+    float roughness;
+    float3 cameraPos;
     float2 uvScale;
     float2 uvOffset;
+    float3 ambientLight;
 }
 
 // Example Texture2D and SamplerState definitions in an HLSL pixel shader
@@ -38,8 +26,11 @@ SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
+    input.normal = normalize(input.normal);
     input.uv = input.uv * uvScale + uvOffset;
     float3 surfaceColor = SurfaceColor.Sample(BasicSampler, input.uv).rgb;
     surfaceColor *= colorTint;
-    return float4(surfaceColor, 1);
+    //return float4(ambientLight * surfaceColor, 1);
+    return float4(input.normal, 1);
+
 }

@@ -34,6 +34,9 @@ private:
 	float shaderTint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	int radioIndex = 0;
 
+	// ambient lighting
+	XMFLOAT3 ambientLight = XMFLOAT3(0.1, 0.15, 0.25);
+
 	// New Geometry
 	std::vector<std::shared_ptr<Mesh>> meshes;
 

@@ -247,6 +247,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="ShaderIncludes.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="D3D11Starter.rc" />

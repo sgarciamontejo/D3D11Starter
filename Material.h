@@ -9,6 +9,7 @@ class Material
 {
 	const char* name;
 	DirectX::XMFLOAT4 colorTint;
+	float roughness; // range 0 - 1
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vs;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> ps;
 	DirectX::XMFLOAT2 uvScale = DirectX::XMFLOAT2(1.0f, 1.0f);
@@ -21,10 +22,11 @@ class Material
 	std::unordered_map<unsigned int, Microsoft::WRL::ComPtr<ID3D11SamplerState>> samplers;
 
 public:
-	Material(const char* name, DirectX::XMFLOAT4 colorTint, Microsoft::WRL::ComPtr<ID3D11VertexShader> vs, Microsoft::WRL::ComPtr<ID3D11PixelShader> ps, DirectX::XMFLOAT2 uvScale, DirectX::XMFLOAT2 uvOffset);
+	Material(const char* name, DirectX::XMFLOAT4 colorTint, float roughness, Microsoft::WRL::ComPtr<ID3D11VertexShader> vs, Microsoft::WRL::ComPtr<ID3D11PixelShader> ps, DirectX::XMFLOAT2 uvScale, DirectX::XMFLOAT2 uvOffset);
 	~Material();
 
 	DirectX::XMFLOAT4 GetColorTint();
+	float GetRoughness();
 	DirectX::XMFLOAT2 GetUVScale();
 	DirectX::XMFLOAT2 GetUVOffset();
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> GetVertexShader();
@@ -35,6 +37,7 @@ public:
 	std::unordered_map<unsigned int, Microsoft::WRL::ComPtr<ID3D11SamplerState>> GetSamplerMap();
 
 	void SetColorTint(DirectX::XMFLOAT4 newTint);
+	void SetRoughness(float roughness);
 	void SetUVScale(DirectX::XMFLOAT2 uvScale);
 	void SetUVOffset(DirectX::XMFLOAT2 uvOffset);
 	void SetVertexShader(Microsoft::WRL::ComPtr<ID3D11VertexShader> vs);

@@ -234,15 +234,15 @@ void Game::CreateGeometry()
 	//std::shared_ptr<Material> matNormals = std::make_shared<Material>("Normals", XMFLOAT4(1, 1, 1, 1), firstVertexShader, normalsPixelShader);
 	//std::shared_ptr<Material> matCustom = std::make_shared<Material>("Custom", XMFLOAT4(1, 1, 1, 1), firstVertexShader, customPixelShader);
 
-	std::shared_ptr<Material> matWood = std::make_shared<Material>("Wood", XMFLOAT4(1, 1, 1, 1), firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
+	std::shared_ptr<Material> matWood = std::make_shared<Material>("Wood", XMFLOAT4(1, 1, 1, 1), 1.0f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
 	matWood->AddSampler(0, samplerState);
 	matWood->AddTextureSRV(0, woodTableResource);
 
-	std::shared_ptr<Material> matRock = std::make_shared<Material>("Rock", XMFLOAT4(1, 1, 1, 1), firstVertexShader, firstPixelShader, XMFLOAT2(1,1), XMFLOAT2(0, 0));
+	std::shared_ptr<Material> matRock = std::make_shared<Material>("Rock", XMFLOAT4(1, 1, 1, 1), 1.0f, firstVertexShader, firstPixelShader, XMFLOAT2(1,1), XMFLOAT2(0, 0));
 	matRock->AddSampler(0, samplerState);
 	matRock->AddTextureSRV(0, rockWallResource);
 
-	std::shared_ptr<Material> matCrackedRock = std::make_shared<Material>("Cracked Rock", XMFLOAT4(1, 1, 1, 1), firstVertexShader, comboPixelShader, XMFLOAT2(2,2), XMFLOAT2(0, 0));
+	std::shared_ptr<Material> matCrackedRock = std::make_shared<Material>("Cracked Rock", XMFLOAT4(1, 1, 1, 1), 1.0f, firstVertexShader, comboPixelShader, XMFLOAT2(2,2), XMFLOAT2(0, 0));
 	matCrackedRock->AddSampler(0, samplerState);
 	matCrackedRock->AddTextureSRV(0, rockWallResource);
 	matCrackedRock->AddTextureSRV(1, crackedWallResource);
@@ -393,6 +393,7 @@ void Game::Draw(float deltaTime, float totalTime)
 			VertexShaderData vsData;
 			//cbData.colorTint = entity->GetMaterial()->GetColorTint();
 			vsData.world = entity->GetTransform().GetWorldMatrix();
+			vsData.worldInvTranspose = entity->GetTransform().GetWorldInverseTransposeMatrix();
 			vsData.projection = activeCamera->GetProjectionMatrix();
 			vsData.view = activeCamera->GetViewMatrix();
 			Graphics::FillAndBindNextConstantBuffer(&vsData, sizeof(VertexShaderData), D3D11_VERTEX_SHADER, 0);
@@ -400,8 +401,10 @@ void Game::Draw(float deltaTime, float totalTime)
 			// PS DATA
 			PixelShaderData psData;
 			psData.colorTint = entity->GetMaterial()->GetColorTint();
+			psData.roughness = entity->GetMaterial()->GetRoughness();
 			psData.uvScale = entity->GetMaterial()->GetUVScale();
 			psData.uvOffset = entity->GetMaterial()->GetUVOffset();
+			psData.ambientLight = ambientLight;
 			Graphics::FillAndBindNextConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
 
 			//D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};

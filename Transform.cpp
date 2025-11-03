@@ -75,7 +75,7 @@ XMFLOAT4X4 Transform::GetWorldMatrix()
 
 XMFLOAT4X4 Transform::GetWorldInverseTransposeMatrix()
 {
-	return XMFLOAT4X4();
+	return worldInverseTranspose;
 }
 
 XMFLOAT3 Transform::GetRight()

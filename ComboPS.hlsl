@@ -1,21 +1,14 @@
-struct VertexToPixel
-{
-	// Data type
-	//  |
-	//  |   Name          Semantic
-	//  |    |                |
-	//  v    v                v
-    float4 screenPosition : SV_POSITION;
-    float2 uv : TEXCOORD;
-    float3 normal : NORMAL;
-};
+#include "ShaderIncludes.hlsli"
 
 // Constant Buffer
 cbuffer ExternalData : register(b0)
 {
     float4 colorTint;
+    float roughness;
+    float3 cameraPos;
     float2 uvScale;
     float2 uvOffset;
+    float3 ambientLight;
 }
 
 // Example Texture2D and SamplerState definitions in an HLSL pixel shader
@@ -31,5 +24,5 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     surfaceColor *= overlayTexture;
     surfaceColor *= colorTint;
-    return float4(surfaceColor, 1);
+    return float4(ambientLight * surfaceColor, 1);
 }
