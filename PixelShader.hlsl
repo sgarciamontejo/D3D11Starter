@@ -31,7 +31,10 @@ float4 main(VertexToPixel input) : SV_TARGET
     input.uv = input.uv * uvScale + uvOffset;
     float3 surfaceColor = SurfaceColor.Sample(BasicSampler, input.uv).rgb;
     surfaceColor *= colorTint;
-    //return float4(ambientLight * surfaceColor, 1);
+    
+    // diffuse calculation
+    directionalLight1.Direction
+    
+    return float4(ambientLight * surfaceColor, 1);
     //return float4(input.normal, 1);
-    return float4(directionalLight1.Color, 1);
 }
