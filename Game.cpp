@@ -62,10 +62,10 @@ Game::Game()
 	//  - You'll be expanding and/or replacing these later
 	CreateGeometry();
 
-	cameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, 10.0f))); // cam 1
+	cameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0.0f, 0.0f, -10.0f))); // cam 1
 	cameras.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(-5.0f, 2.25f, 10.0f))); // cam 2
-	cameras[0]->transform.SetRotation(XMFLOAT3(0, 3.14f, 0));
-	cameras[1]->transform.SetRotation(XMFLOAT3(0, 3.14f, 0));
+	cameras[0]->transform.SetRotation(XMFLOAT3(0, 0.0f, 0));
+	cameras[1]->transform.SetRotation(XMFLOAT3(0, 0.0f, 0));
 	activeCamera = cameras[0];
 
 	// Set initial graphics API state
@@ -208,6 +208,13 @@ void Game::CreateGeometry()
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	Graphics::Device->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf());
 
+	// Lights
+	directionalLight1 = {};
+	directionalLight1.Type = 0;
+	directionalLight1.Direction = XMFLOAT3(1.0f, -1.0f, 0.0f);
+	directionalLight1.Color = XMFLOAT3(0.5f, 0.5f, 0.5f);
+	directionalLight1.Intensity = 1.0f;
+
 	// Load Textures
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockWallResource;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodTableResource;
@@ -286,25 +293,25 @@ void Game::CreateGeometry()
 
 	//cube1->GetTransform().MoveAbsolute(15.0f, 5.0f, -10.0f);
 	//cube2->GetTransform().MoveAbsolute(15.0f, 0.0f, -10.0f);
-	cube3->GetTransform().MoveAbsolute(15.0f, -5.0f, -10.0f);
+	cube3->GetTransform().MoveAbsolute(-15.0f, -5.0f, 10.0f);
 	//cylinder1->GetTransform().MoveAbsolute(10.0f, 5.0f, -10.0f);
 	//cylinder2->GetTransform().MoveAbsolute(10.0f, 0.0f, -10.0f);
-	cylinder3->GetTransform().MoveAbsolute(10.0f, -5.0f, -10.0f);
+	cylinder3->GetTransform().MoveAbsolute(-10.0f, -5.0f, 10.0f);
 	//helix1->GetTransform().MoveAbsolute(5.0f, 5.0f, -10.0f);
 	//helix2->GetTransform().MoveAbsolute(5.0f, 0.0f, -10.0f);
-	helix3->GetTransform().MoveAbsolute(5.0f, -5.0f, -10.0f);
+	helix3->GetTransform().MoveAbsolute(-5.0f, -5.0f, 10.0f);
 	//sphere1->GetTransform().MoveAbsolute(0.0f, 5.0f, -10.0f);
 	//sphere2->GetTransform().MoveAbsolute(0.0f, 0.0f, -10.0f);
-	sphere3->GetTransform().MoveAbsolute(0.0f, -5.0f, -10.0f);
+	sphere3->GetTransform().MoveAbsolute(0.0f, -5.0f, 10.0f);
 	//torus1->GetTransform().MoveAbsolute(-5.0f, 5.0f, -10.0f);
 	//torus2->GetTransform().MoveAbsolute(-5.0f, 0.0f, -10.0f);
-	torus3->GetTransform().MoveAbsolute(-5.0f, -5.0f, -10.0f);
+	torus3->GetTransform().MoveAbsolute(5.0f, -5.0f, 10.0f);
 	//quad1->GetTransform().MoveAbsolute(-10.0f, 5.0f, -10.0f);
 	//quad2->GetTransform().MoveAbsolute(-10.0f, 0.0f, -10.0f);
-	quad3->GetTransform().MoveAbsolute(-10.0f, -5.0f, -10.0f);
+	quad3->GetTransform().MoveAbsolute(10.0f, -5.0f, 10.0f);
 	//quad_double_sided1->GetTransform().MoveAbsolute(-15.0f, 5.0f, -10.0f);
 	//quad_double_sided2->GetTransform().MoveAbsolute(-15.0f, 0.0f, -10.0f);
-	quad_double_sided3->GetTransform().MoveAbsolute(-15.0f, -5.0f, -10.0f);
+	quad_double_sided3->GetTransform().MoveAbsolute(15.0f, -5.0f, 10.0f);
 
 	//entities.push_back(cube1);
 	//entities.push_back(cube2);
@@ -405,6 +412,7 @@ void Game::Draw(float deltaTime, float totalTime)
 			psData.uvScale = entity->GetMaterial()->GetUVScale();
 			psData.uvOffset = entity->GetMaterial()->GetUVOffset();
 			psData.ambientLight = ambientLight;
+			memcpy(&psData.directionalLight1, &directionalLight1, sizeof(Light));
 			Graphics::FillAndBindNextConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
 
 			//D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};

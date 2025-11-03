@@ -8,6 +8,7 @@
 #include "BufferStructs.h"
 #include "GameEntity.h"
 #include "Camera.h"
+#include "Lights.h"
 #include <vector>
 
 class Game
@@ -35,7 +36,10 @@ private:
 	int radioIndex = 0;
 
 	// ambient lighting
-	XMFLOAT3 ambientLight = XMFLOAT3(0.1, 0.15, 0.25);
+	XMFLOAT3 ambientLight = XMFLOAT3(0.1f, 0.15f, 0.25f);
+
+	// directional lighting
+	Light directionalLight1;
 
 	// New Geometry
 	std::vector<std::shared_ptr<Mesh>> meshes;

@@ -9,6 +9,7 @@ cbuffer ExternalData : register(b0)
     float2 uvScale;
     float2 uvOffset;
     float3 ambientLight;
+    Light directionalLight1;
 }
 
 // Example Texture2D and SamplerState definitions in an HLSL pixel shader
@@ -31,6 +32,6 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 surfaceColor = SurfaceColor.Sample(BasicSampler, input.uv).rgb;
     surfaceColor *= colorTint;
     //return float4(ambientLight * surfaceColor, 1);
-    return float4(input.normal, 1);
-
+    //return float4(input.normal, 1);
+    return float4(directionalLight1.Color, 1);
 }
