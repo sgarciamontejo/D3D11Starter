@@ -30,11 +30,22 @@ float4 main(VertexToPixel input) : SV_TARGET
     input.normal = normalize(input.normal);
     input.uv = input.uv * uvScale + uvOffset;
     float3 surfaceColor = SurfaceColor.Sample(BasicSampler, input.uv).rgb;
-    surfaceColor *= colorTint;
+    surfaceColor *= colorTint.rgb;
+    
+    float3 totalLight = ambientLight * surfaceColor;
     
     // diffuse calculation
-    directionalLight1.Direction
+    Light dirLight = directionalLight1;
+    dirLight.Direction = normalize(dirLight.Direction);
+    //dir light
+    float3 dirToLight = normalize(-dirLight.Direction);
+    float3 dirToCam = normalize(cameraPos - input.worldPos);
+    float diffuse = saturate(dot(input.normal, dirToLight));
     
-    return float4(ambientLight * surfaceColor, 1);
+    totalLight += (diffuse * surfaceColor) * dirLight.Intensity * dirLight.Color;
+    
+    //directionalLight1.Color
+    
+    return float4(totalLight, 1);
     //return float4(input.normal, 1);
 }

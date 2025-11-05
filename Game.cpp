@@ -212,7 +212,7 @@ void Game::CreateGeometry()
 	directionalLight1 = {};
 	directionalLight1.Type = 0;
 	directionalLight1.Direction = XMFLOAT3(1.0f, -1.0f, 0.0f);
-	directionalLight1.Color = XMFLOAT3(0.5f, 0.5f, 0.5f);
+	directionalLight1.Color = XMFLOAT3(1.0f, 0.5f, 0.0f);
 	directionalLight1.Intensity = 1.0f;
 
 	// Load Textures
