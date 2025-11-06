@@ -61,7 +61,7 @@ float SpecularPhong(float3 normal, float3 lightDir, float3 camDir, float roughne
 {
     float3 reflective = reflect(-lightDir, normal);
     float specExponent = (1.0f - roughness) * MAX_SPECULAR_EXPONENT;
-    float spec = pow(max(dot(R, V), 0.0f), specExponent);
+    float spec = pow(max(dot(reflective, camDir), 0.0f), specExponent);
     if (specExponent < 0.05f)
     {
         spec = 0;
@@ -83,7 +83,7 @@ float DirectionalLight(Light light, float3 normal, float3 worldPos, float3 camPo
     float diffuse = saturate(dot(normal, dirToLight));
     float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness) * specularScale;
 
-    return (surfaceColor * diffuse + spec) * light.Intensity * light.Color;
+    return (surfaceColor * (diffuse + spec)) * light.Intensity * light.Color;
 }
 
 #endif

@@ -215,6 +215,8 @@ void Game::CreateGeometry()
 	directionalLight1.Color = XMFLOAT3(1.0f, 0.5f, 0.0f);
 	directionalLight1.Intensity = 0.5f;
 
+	lights.insert(lights.end(), { directionalLight1 });
+
 	// Load Textures
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockWallResource;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodTableResource;
@@ -417,7 +419,8 @@ void Game::Draw(float deltaTime, float totalTime)
 			psData.uvScale = entity->GetMaterial()->GetUVScale();
 			psData.uvOffset = entity->GetMaterial()->GetUVOffset();
 			psData.ambientLight = ambientLight;
-			memcpy(&psData.lights, &lights[0], sizeof(Light) * (int)lights->size());
+			memcpy(&psData.lights, &lights[0], sizeof(Light) * (int)lights.size());
+			psData.lightCount = lights.size();
 			Graphics::FillAndBindNextConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
 
 			entity->Draw();

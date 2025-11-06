@@ -19,5 +19,6 @@ struct PixelShaderData
 	DirectX::XMFLOAT3 ambientLight;
 	Light directionalLight1;
 	Light lights[5];
+	int lightCount;
 };
 

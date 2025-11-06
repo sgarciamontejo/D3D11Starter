@@ -10,6 +10,8 @@ cbuffer ExternalData : register(b0)
     float2 uvOffset;
     float3 ambientLight;
     Light directionalLight1;
+    Light lights[5]; // 5 lights
+    int lightCount;
 }
 
 // Example Texture2D and SamplerState definitions in an HLSL pixel shader
@@ -36,6 +38,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 dirToLight = normalize(-dirLight.Direction);
     float3 dirToCam = normalize(cameraPos - input.worldPos);
     float diffuse = saturate(dot(input.normal, dirToLight));
+    float spec = SpecularPhong(input.normal, dirToLight, dirToCam, roughness);
 
     
     //totalLight += (surfaceColor * (diffuse + spec)) * dirLight.Intensity * dirLight.Color; // tint specular

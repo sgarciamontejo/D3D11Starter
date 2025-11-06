@@ -39,7 +39,7 @@ private:
 	XMFLOAT3 ambientLight = XMFLOAT3(0.1f, 0.15f, 0.25f);
 
 	// directional lighting
-	std::vector<Light> lights[5];
+	std::vector<Light> lights;
 	Light directionalLight1;
 
 	// New Geometry

@@ -54,12 +54,12 @@ float4 main(VertexToPixel input) : SV_TARGET
         // point light
         else if (light.Type == 1)
         {
-            totalLight += PointLight();
+            //totalLight += PointLight();
         }
 
     }
     
-        totalLight += (surfaceColor * (diffuse + spec)) * dirLight.Intensity * dirLight.Color; // tint specular
+    //totalLight += (surfaceColor * (diffuse + spec)) * dirLight.Intensity * dirLight.Color; // tint specular
     //totalLight += (surfaceColor * diffuse + spec) * dirLight.Intensity * dirLight.Color; // dont tint specular
     
     return float4(totalLight, 1);
