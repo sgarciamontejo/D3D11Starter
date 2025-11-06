@@ -18,5 +18,6 @@ struct PixelShaderData
 	DirectX::XMFLOAT2 uvOffset;
 	DirectX::XMFLOAT3 ambientLight;
 	Light directionalLight1;
+	Light lights[5];
 };
 

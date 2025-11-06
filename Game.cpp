@@ -211,9 +211,9 @@ void Game::CreateGeometry()
 	// Lights
 	directionalLight1 = {};
 	directionalLight1.Type = 0;
-	directionalLight1.Direction = XMFLOAT3(1.0f, -1.0f, 0.0f);
+	directionalLight1.Direction = XMFLOAT3(0.0f, 1.0f, -1.0f);
 	directionalLight1.Color = XMFLOAT3(1.0f, 0.5f, 0.0f);
-	directionalLight1.Intensity = 1.0f;
+	directionalLight1.Intensity = 0.5f;
 
 	// Load Textures
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockWallResource;
@@ -241,15 +241,15 @@ void Game::CreateGeometry()
 	//std::shared_ptr<Material> matNormals = std::make_shared<Material>("Normals", XMFLOAT4(1, 1, 1, 1), firstVertexShader, normalsPixelShader);
 	//std::shared_ptr<Material> matCustom = std::make_shared<Material>("Custom", XMFLOAT4(1, 1, 1, 1), firstVertexShader, customPixelShader);
 
-	std::shared_ptr<Material> matWood = std::make_shared<Material>("Wood", XMFLOAT4(1, 1, 1, 1), 1.0f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
+	std::shared_ptr<Material> matWood = std::make_shared<Material>("Wood", XMFLOAT4(1, 1, 1, 1), 0.5f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
 	matWood->AddSampler(0, samplerState);
 	matWood->AddTextureSRV(0, woodTableResource);
 
-	std::shared_ptr<Material> matRock = std::make_shared<Material>("Rock", XMFLOAT4(1, 1, 1, 1), 1.0f, firstVertexShader, firstPixelShader, XMFLOAT2(1,1), XMFLOAT2(0, 0));
+	std::shared_ptr<Material> matRock = std::make_shared<Material>("Rock", XMFLOAT4(1, 1, 1, 1), 0.8f, firstVertexShader, firstPixelShader, XMFLOAT2(1,1), XMFLOAT2(0, 0));
 	matRock->AddSampler(0, samplerState);
 	matRock->AddTextureSRV(0, rockWallResource);
 
-	std::shared_ptr<Material> matCrackedRock = std::make_shared<Material>("Cracked Rock", XMFLOAT4(1, 1, 1, 1), 1.0f, firstVertexShader, comboPixelShader, XMFLOAT2(2,2), XMFLOAT2(0, 0));
+	std::shared_ptr<Material> matCrackedRock = std::make_shared<Material>("Cracked Rock", XMFLOAT4(1, 1, 1, 1), 0.9f, firstVertexShader, comboPixelShader, XMFLOAT2(2,2), XMFLOAT2(0, 0));
 	matCrackedRock->AddSampler(0, samplerState);
 	matCrackedRock->AddTextureSRV(0, rockWallResource);
 	matCrackedRock->AddTextureSRV(1, crackedWallResource);
@@ -368,6 +368,11 @@ void Game::Update(float deltaTime, float totalTime)
 	//entities[0]->GetTransform().SetPosition(-0.2f, (float)sin(totalTime)*0.5f-0.5f, 0);
 	//entities[2]->GetTransform().Rotate(0, deltaTime * 1.0f, 0);
 	//entities[3]->GetTransform().SetScale((float)sin(totalTime)*0.5f+1.0f, (float)sin(totalTime)*0.5f+1.0f, 0.0f);
+	for (std::shared_ptr<GameEntity> entity : entities) {
+		Transform transform = entity->GetTransform();
+		XMFLOAT3 currentPYR = transform.GetPitchYawRoll();
+		entity->GetTransform().Rotate(currentPYR.x, deltaTime * 1.0f, currentPYR.z);
+	}
 }
 
 
@@ -412,20 +417,8 @@ void Game::Draw(float deltaTime, float totalTime)
 			psData.uvScale = entity->GetMaterial()->GetUVScale();
 			psData.uvOffset = entity->GetMaterial()->GetUVOffset();
 			psData.ambientLight = ambientLight;
-			memcpy(&psData.directionalLight1, &directionalLight1, sizeof(Light));
+			memcpy(&psData.lights, &lights[0], sizeof(Light) * (int)lights->size());
 			Graphics::FillAndBindNextConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
-
-			//D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-			// map the Vertex Shader cb
-			//Graphics::Context->Map(vs_constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-			//memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-			//Graphics::Context->Unmap(vs_constBuffer.Get(), 0);
-
-			//// map the Pixel Shader cb
-			//Graphics::Context->Map(ps_constBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-			//memcpy(mappedBuffer.pData, &psData, sizeof(psData));
-			//Graphics::Context->Unmap(ps_constBuffer.Get(), 0);
-			
 
 			entity->Draw();
 		}

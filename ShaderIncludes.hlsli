@@ -57,4 +57,33 @@ struct VertexShaderInput
     float3 normal : NORMAL;
 };
 
+float SpecularPhong(float3 normal, float3 lightDir, float3 camDir, float roughness)
+{
+    float3 reflective = reflect(-lightDir, normal);
+    float specExponent = (1.0f - roughness) * MAX_SPECULAR_EXPONENT;
+    float spec = pow(max(dot(R, V), 0.0f), specExponent);
+    if (specExponent < 0.05f)
+    {
+        spec = 0;
+    }
+    
+    return spec;
+}
+
+float Diffuse(float3 normal, float lightDir)
+{
+    return saturate(dot(normal, lightDir));
+}
+
+float DirectionalLight(Light light, float3 normal, float3 worldPos, float3 camPos, float roughness, float3 surfaceColor, float specularScale)
+{
+    float3 dirToLight = normalize(-light.Direction);
+    float3 dirToCam = normalize(camPos - worldPos);
+    
+    float diffuse = saturate(dot(normal, dirToLight));
+    float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness) * specularScale;
+
+    return (surfaceColor * diffuse + spec) * light.Intensity * light.Color;
+}
+
 #endif
