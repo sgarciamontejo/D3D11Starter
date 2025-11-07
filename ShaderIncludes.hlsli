@@ -70,20 +70,58 @@ float SpecularPhong(float3 normal, float3 lightDir, float3 camDir, float roughne
     return spec;
 }
 
-float Diffuse(float3 normal, float lightDir)
+float Attenuate(Light light, float3 worldPos)
+{
+    float dist = distance(light.Position, worldPos);
+    float att = saturate(1.0f - (dist * dist / (light.Range * light.Range)));
+    return att * att;
+}
+
+float Diffuse(float3 normal, float3 lightDir)
 {
     return saturate(dot(normal, lightDir));
 }
 
-float DirectionalLight(Light light, float3 normal, float3 worldPos, float3 camPos, float roughness, float3 surfaceColor, float specularScale)
+float3 DirectionalLight(Light light, float3 normal, float3 worldPos, float3 camPos, float roughness, float3 surfaceColor)
 {
     float3 dirToLight = normalize(-light.Direction);
     float3 dirToCam = normalize(camPos - worldPos);
     
-    float diffuse = saturate(dot(normal, dirToLight));
-    float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness) * specularScale;
+    float diffuse = Diffuse(normal, dirToLight);
+    float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness);
 
+    
     return (surfaceColor * (diffuse + spec)) * light.Intensity * light.Color;
+}
+
+float3 PointLight(Light light, float3 normal, float3 worldPos, float3 camPos, float roughness, float3 surfaceColor)
+{
+    //light pos - pixel world pos
+    float3 dirToLight = normalize(light.Position - worldPos);
+    float3 dirToCam = normalize(camPos - worldPos);
+    
+    float diffuse = Diffuse(normal, dirToLight);
+    float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness);
+    float attenuate = Attenuate(light, worldPos);
+    
+    return (surfaceColor * diffuse + spec) * attenuate * light.Intensity * light.Color;
+}
+
+float3 SpotLight(Light light, float3 normal, float3 worldPos, float3 camPos, float roughness, float3 surfaceColor)
+{
+    float3 dirToLight = normalize(light.Position - worldPos);
+    
+    // get cos(angle) between pixel and light dir
+    float pixelAngle = saturate(dot(-dirToLight, light.Direction));
+    
+    // get cosibes of angles and calc range
+    float cosOuter = cos(light.SpotOuterAngle);
+    float cosInner = cos(light.SpotInnerAngle);
+    float falloffRange = cosOuter - cosInner;
+    
+    // linear falloff over range, clamp 0-1 and apply to light calc
+    float spotTerm = saturate((cosOuter - pixelAngle) / falloffRange);
+    return PointLight(light, normal, worldPos, camPos, roughness, surfaceColor) * spotTerm;
 }
 
 #endif

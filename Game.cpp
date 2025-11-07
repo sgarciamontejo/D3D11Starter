@@ -209,13 +209,39 @@ void Game::CreateGeometry()
 	Graphics::Device->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf());
 
 	// Lights
-	directionalLight1 = {};
-	directionalLight1.Type = 0;
-	directionalLight1.Direction = XMFLOAT3(0.0f, 1.0f, -1.0f);
+	Light directionalLight1 = {};
+	directionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight1.Direction = XMFLOAT3(1.0f, -1.0f, -1.0f);
 	directionalLight1.Color = XMFLOAT3(1.0f, 0.5f, 0.0f);
-	directionalLight1.Intensity = 0.5f;
+	directionalLight1.Intensity = 0.8f;
 
-	lights.insert(lights.end(), { directionalLight1 });
+	Light directionalLight2 = {};
+	directionalLight2.Type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight2.Direction = XMFLOAT3(-1.0f, -1.0f, -1.0f);
+	directionalLight2.Color = XMFLOAT3(0.3f, 0.9f, 0.3f);
+	directionalLight2.Intensity = 0.8f;
+
+	Light pointLight1 = {};
+	pointLight1.Type = LIGHT_TYPE_POINT;
+	pointLight1.Position = XMFLOAT3(-5.0f, -5.0f, 5.0f);
+	pointLight1.Color = XMFLOAT3(0.3f, 0.3f, 1);
+	pointLight1.Intensity = 1.0f;
+	pointLight1.Range = 20.0f;
+
+	Light spotLight1 = {};
+	spotLight1.Type = LIGHT_TYPE_SPOT;
+	spotLight1.Position = XMFLOAT3(10.0f, 1.0f, 10.0f);
+	spotLight1.Color = XMFLOAT3(0.9f, 0.2f, 0.2f);
+	spotLight1.Intensity = 2.0f;
+	spotLight1.Direction = XMFLOAT3(0, -1, 0);
+	spotLight1.Range = 20.0f;
+	spotLight1.SpotOuterAngle = XMConvertToRadians(20.0f);
+	spotLight1.SpotInnerAngle = XMConvertToRadians(15.0f);
+
+	lights.push_back(directionalLight1); 
+	lights.push_back(directionalLight2);
+	lights.push_back(pointLight1);
+	lights.push_back(spotLight1);
 
 	// Load Textures
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockWallResource;
@@ -414,13 +440,15 @@ void Game::Draw(float deltaTime, float totalTime)
 
 			// PS DATA
 			PixelShaderData psData;
+			memcpy(&psData.lights, &lights[0], sizeof(Light) * (int)lights.size());
+			psData.lightCount = (int)lights.size();
+			psData.ambientLight = ambientLight;
 			psData.colorTint = entity->GetMaterial()->GetColorTint();
 			psData.roughness = entity->GetMaterial()->GetRoughness();
+			psData.cameraPos = activeCamera->transform.GetPosition();
 			psData.uvScale = entity->GetMaterial()->GetUVScale();
 			psData.uvOffset = entity->GetMaterial()->GetUVOffset();
-			psData.ambientLight = ambientLight;
-			memcpy(&psData.lights, &lights[0], sizeof(Light) * (int)lights.size());
-			psData.lightCount = lights.size();
+			
 			Graphics::FillAndBindNextConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
 
 			entity->Draw();
@@ -483,13 +511,13 @@ void Game::BuildUI() {
 	}
 
 	// Replace the %f with the next parameter, and format as a float
-	ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
+	//ImGui::Text("Framerate: %f fps", ImGui::GetIO().Framerate);
 	// Replace each %d with the next parameter, and format as decimal integers
 	// The "x" will be printed as-is between the numbers, like so: 800x600
-	ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
+	//ImGui::Text("Window Resolution: %dx%d", Window::Width(), Window::Height());
 
-	ImGui::ColorEdit4("Background Color", &demoColor[0]);
-	ImGui::ColorEdit4("Tint", shaderTint);
+	//ImGui::ColorEdit4("Background Color", &demoColor[0]);
+	//ImGui::ColorEdit4("Tint", shaderTint);
 
 	// these are technically 3 elements including the header
 	if (ImGui::TreeNode("Meshes"))
@@ -552,6 +580,25 @@ void Game::BuildUI() {
 		}
 
 		// close node tree
+		ImGui::TreePop();
+	}
+
+	//Lights
+	if (ImGui::TreeNode("Lights")) {
+		if (ImGui::ColorEdit3("Ambience", &ambientLight.x));
+
+		for (int i = 0; i < lights.size(); i++) {
+			ImGui::PushID(&lights[i]);
+
+			if (ImGui::TreeNode("Light Node", "Light %d", i + 1)) {
+				if (ImGui::ColorEdit3("Color", &lights[i].Color.x));
+				if (ImGui::DragFloat("Intensity", &lights[i].Intensity));
+
+				ImGui::TreePop();
+			}
+			ImGui::PopID();
+		}
+
 		ImGui::TreePop();
 	}
 	

@@ -3,21 +3,22 @@
 // Constant Buffer
 cbuffer ExternalData : register(b0)
 {
+    Light lights[5]; // 5 lights
+    
+    int lightCount;
+    float3 ambientLight;
+    
     float4 colorTint;
+    
     float roughness;
     float3 cameraPos;
+    
     float2 uvScale;
     float2 uvOffset;
-    float3 ambientLight;
-    Light directionalLight1;
-    Light lights[5]; // 5 lights
-    int lightCount;
 }
 
 // Example Texture2D and SamplerState definitions in an HLSL pixel shader
 Texture2D SurfaceColor : register(t0); // A texture assigned to texture slot 0
-Texture2D SpecularMap : register(t1);
-
 SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 0
 
 // --------------------------------------------------------
@@ -36,25 +37,29 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 surfaceColor = SurfaceColor.Sample(BasicSampler, input.uv).rgb;
     surfaceColor *= colorTint.rgb;
     
-    float specularScale = SpecularMap.Sample(BasicSampler, input.uv).r;
+    //float specularScale = SpecularMap.Sample(BasicSampler, input.uv).r;
     
     float3 totalLight = ambientLight * surfaceColor;
-    
+   
     // diffuse calculation
     for (int i = 0; i < lightCount; i++)
     {
         Light light = lights[i];
         light.Direction = normalize(light.Direction);
-        
+
         // directional light
         if (light.Type == 0)
         {
-            totalLight += DirectionalLight(light, input.normal, input.worldPos, cameraPos, roughness, surfaceColor, specularScale);
+            totalLight += DirectionalLight(light, input.normal, input.worldPos, cameraPos, roughness, surfaceColor);
         }
         // point light
         else if (light.Type == 1)
         {
-            //totalLight += PointLight();
+            totalLight += PointLight(light, input.normal, input.worldPos, cameraPos, roughness, surfaceColor);
+        }
+        else if (light.Type == 2)
+        {
+            totalLight += SpotLight(light, input.normal, input.worldPos, cameraPos, roughness, surfaceColor);
         }
 
     }

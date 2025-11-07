@@ -40,7 +40,6 @@ private:
 
 	// directional lighting
 	std::vector<Light> lights;
-	Light directionalLight1;
 
 	// New Geometry
 	std::vector<std::shared_ptr<Mesh>> meshes;

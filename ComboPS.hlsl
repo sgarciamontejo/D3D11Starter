@@ -3,15 +3,14 @@
 // Constant Buffer
 cbuffer ExternalData : register(b0)
 {
+    Light lights[5]; // 5 lights
+    int lightCount;
+    float3 ambientLight;
     float4 colorTint;
     float roughness;
     float3 cameraPos;
     float2 uvScale;
     float2 uvOffset;
-    float3 ambientLight;
-    Light directionalLight1;
-    Light lights[5]; // 5 lights
-    int lightCount;
 }
 
 // Example Texture2D and SamplerState definitions in an HLSL pixel shader
@@ -32,17 +31,29 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 totalLight = ambientLight * surfaceColor;
     
     // diffuse calculation
-    Light dirLight = directionalLight1;
-    dirLight.Direction = normalize(dirLight.Direction);
-    //dir light
-    float3 dirToLight = normalize(-dirLight.Direction);
-    float3 dirToCam = normalize(cameraPos - input.worldPos);
-    float diffuse = saturate(dot(input.normal, dirToLight));
-    float spec = SpecularPhong(input.normal, dirToLight, dirToCam, roughness);
+    for (int i = 0; i < lightCount; i++)
+    {
+        Light light = lights[i];
+        light.Direction = normalize(light.Direction);
 
-    
+        // directional light
+        if (light.Type == 0)
+        {
+            totalLight += DirectionalLight(light, input.normal, input.worldPos, cameraPos, roughness, surfaceColor);
+        }
+        // point light
+        else if (light.Type == 1)
+        {
+            totalLight += PointLight(light, input.normal, input.worldPos, cameraPos, roughness, surfaceColor);
+        }
+        else if (light.Type == 2)
+        {
+            totalLight += SpotLight(light, input.normal, input.worldPos, cameraPos, roughness, surfaceColor);
+        }
+
+    }
     //totalLight += (surfaceColor * (diffuse + spec)) * dirLight.Intensity * dirLight.Color; // tint specular
-    totalLight += (surfaceColor * diffuse + spec) * dirLight.Intensity * dirLight.Color; // dont tint specular
+    //totalLight += (surfaceColor * diffuse + spec) * dirLight.Intensity * dirLight.Color; // dont tint specular
     
     return float4(totalLight, 1);
 }

@@ -11,14 +11,18 @@ struct VertexShaderData
 
 struct PixelShaderData
 {
+	Light lights[5];
+
+	int lightCount;
+	DirectX::XMFLOAT3 ambientLight;
+
 	DirectX::XMFLOAT4 colorTint;
+
 	float roughness;
 	DirectX::XMFLOAT3 cameraPos;
+
 	DirectX::XMFLOAT2 uvScale;
 	DirectX::XMFLOAT2 uvOffset;
-	DirectX::XMFLOAT3 ambientLight;
-	Light directionalLight1;
-	Light lights[5];
-	int lightCount;
+
 };
 
