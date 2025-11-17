@@ -28,5 +28,6 @@ public:
 	int GetVertexCount();
 	int GetIndexCount();
 	const char* GetName();
+	void CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices, int numIndices);
 };
 

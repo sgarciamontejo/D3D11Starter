@@ -88,7 +88,7 @@ Game::Game()
 		//  - Doing this NOW because it requires a vertex shader's byte code to verify against!
 		//  - Luckily, we already have that loaded (the vertex shader blob above)
 		{
-			D3D11_INPUT_ELEMENT_DESC inputElements[3] = {};
+			D3D11_INPUT_ELEMENT_DESC inputElements[4] = {};
 
 			// Set up the first element - a position, which is 3 float values
 			inputElements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;				// Most formats are described as color channels; really it just means "Three 32-bit floats"
@@ -104,6 +104,11 @@ Game::Game()
 			inputElements[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;			// 3x 32-bit floats
 			inputElements[2].SemanticName = "NORMAL";							// Match our vertex shader input!
 			inputElements[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;	// After the previous element
+
+			//Set up the fourth element - Tangent vector which is 3 more float values
+			inputElements[3].Format = DXGI_FORMAT_R32G32B32_FLOAT;			// 3x 32-bit floats
+			inputElements[3].SemanticName = "TANGENT";						// Match the VS input
+			inputElements[3].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT; // after the previous element
 
 			ID3DBlob* vertexShaderBlob;
 			D3DReadFileToBlob(FixPath(L"VertexShader.cso").c_str(), &vertexShaderBlob);
