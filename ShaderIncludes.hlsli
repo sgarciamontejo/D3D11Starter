@@ -37,6 +37,7 @@ struct VertexToPixel
     float4 screenPosition : SV_POSITION;
     float2 uv : TEXCOORD;
     float3 normal : NORMAL;
+    float3 tangent : TANGENT;
     float3 worldPos : POSITION;
 };
 
@@ -67,7 +68,7 @@ float SpecularPhong(float3 normal, float3 lightDir, float3 camDir, float roughne
     {
         spec = 0;
     }
-    
+
     return spec;
 }
 
@@ -89,7 +90,7 @@ float3 DirectionalLight(Light light, float3 normal, float3 worldPos, float3 camP
     float3 dirToCam = normalize(camPos - worldPos);
     
     float diffuse = Diffuse(normal, dirToLight);
-    float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness);
+    float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness) * any(diffuse);
 
     
     return (surfaceColor * (diffuse + spec)) * light.Intensity * light.Color;
@@ -102,7 +103,7 @@ float3 PointLight(Light light, float3 normal, float3 worldPos, float3 camPos, fl
     float3 dirToCam = normalize(camPos - worldPos);
     
     float diffuse = Diffuse(normal, dirToLight);
-    float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness);
+    float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness) * any(diffuse);
     float attenuate = Attenuate(light, worldPos);
     
     return (surfaceColor * diffuse + spec) * attenuate * light.Intensity * light.Color;

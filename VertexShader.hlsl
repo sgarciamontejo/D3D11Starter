@@ -36,7 +36,7 @@ VertexToPixel main( VertexShaderInput input )
 	
     output.uv = input.uv;
     output.normal = mul((float3x3)worldInvTranspose, input.normal);
-	
+    output.tangent = mul((float3x3) world, input.tangent); // rotated with normals
     output.worldPos = mul(world, float4(input.localPosition, 1)).xyz;
 
 	// Pass the color through 

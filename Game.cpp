@@ -115,7 +115,7 @@ Game::Game()
 			// Create the input layout, verifying our description against actual shader code
 			Graphics::Device->CreateInputLayout(
 				inputElements,							// An array of descriptions
-				3,										// How many elements in that array?
+				4,										// How many elements in that array?
 				vertexShaderBlob->GetBufferPointer(),	// Pointer to the code of a shader that uses this layout
 				vertexShaderBlob->GetBufferSize(),		// Size of the shader code that uses this layout
 				inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
@@ -218,26 +218,26 @@ void Game::CreateGeometry()
 	directionalLight1.Type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight1.Direction = XMFLOAT3(1.0f, -1.0f, -1.0f);
 	directionalLight1.Color = XMFLOAT3(1.0f, 0.5f, 0.0f);
-	directionalLight1.Intensity = 0.8f;
+	directionalLight1.Intensity = 0.7f;
 
 	Light directionalLight2 = {};
 	directionalLight2.Type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight2.Direction = XMFLOAT3(-1.0f, -1.0f, -1.0f);
 	directionalLight2.Color = XMFLOAT3(0.3f, 0.9f, 0.3f);
-	directionalLight2.Intensity = 0.8f;
+	directionalLight2.Intensity = 0.7f;
 
 	Light pointLight1 = {};
 	pointLight1.Type = LIGHT_TYPE_POINT;
 	pointLight1.Position = XMFLOAT3(-5.0f, -5.0f, 5.0f);
 	pointLight1.Color = XMFLOAT3(0.3f, 0.3f, 1);
-	pointLight1.Intensity = 1.0f;
+	pointLight1.Intensity = 0.6f;
 	pointLight1.Range = 20.0f;
 
 	Light spotLight1 = {};
 	spotLight1.Type = LIGHT_TYPE_SPOT;
 	spotLight1.Position = XMFLOAT3(10.0f, 1.0f, 10.0f);
 	spotLight1.Color = XMFLOAT3(0.9f, 0.2f, 0.2f);
-	spotLight1.Intensity = 2.0f;
+	spotLight1.Intensity = 0.7f;
 	spotLight1.Direction = XMFLOAT3(0, -1, 0);
 	spotLight1.Range = 20.0f;
 	spotLight1.SpotOuterAngle = XMConvertToRadians(20.0f);
@@ -249,13 +249,21 @@ void Game::CreateGeometry()
 	lights.push_back(spotLight1);
 
 	// Load Textures
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockWallResource;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodTableResource;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> crackedWallResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockNormalsResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionNormalsResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobblestoneResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobblestoneNormalsResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> flatNormalsResource;
 
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/Rock Wall/rock_wall_15_diff_4k.jpg").c_str(), 0, rockWallResource.GetAddressOf());
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/Cracks.jpg").c_str(), 0, crackedWallResource.GetAddressOf());
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures/Wooden Table/wood_table_diff_4k.jpg").c_str(), 0, woodTableResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/rock.png").c_str(), 0, rockResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/rock_normals.png").c_str(), 0, rockNormalsResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/cushion.png").c_str(), 0, cushionResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/cushion_normals.png").c_str(), 0, cushionNormalsResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/cobblestone.png").c_str(), 0, cobblestoneResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/cobblestone_normals.png").c_str(), 0, cobblestoneNormalsResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/flat_normals.png").c_str(), 0, flatNormalsResource.GetAddressOf());
 
 	// Load Shaders
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> firstVertexShader = Graphics::LoadVertexShader(FixPath(L"VertexShader.cso").c_str());
@@ -274,20 +282,39 @@ void Game::CreateGeometry()
 	//std::shared_ptr<Material> matNormals = std::make_shared<Material>("Normals", XMFLOAT4(1, 1, 1, 1), firstVertexShader, normalsPixelShader);
 	//std::shared_ptr<Material> matCustom = std::make_shared<Material>("Custom", XMFLOAT4(1, 1, 1, 1), firstVertexShader, customPixelShader);
 
-	std::shared_ptr<Material> matWood = std::make_shared<Material>("Wood", XMFLOAT4(1, 1, 1, 1), 0.5f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
-	matWood->AddSampler(0, samplerState);
-	matWood->AddTextureSRV(0, woodTableResource);
-
 	std::shared_ptr<Material> matRock = std::make_shared<Material>("Rock", XMFLOAT4(1, 1, 1, 1), 0.8f, firstVertexShader, firstPixelShader, XMFLOAT2(1,1), XMFLOAT2(0, 0));
 	matRock->AddSampler(0, samplerState);
-	matRock->AddTextureSRV(0, rockWallResource);
+	matRock->AddTextureSRV(0, rockResource);
+	matRock->AddTextureSRV(1, flatNormalsResource);
 
-	std::shared_ptr<Material> matCrackedRock = std::make_shared<Material>("Cracked Rock", XMFLOAT4(1, 1, 1, 1), 0.9f, firstVertexShader, comboPixelShader, XMFLOAT2(2,2), XMFLOAT2(0, 0));
-	matCrackedRock->AddSampler(0, samplerState);
-	matCrackedRock->AddTextureSRV(0, rockWallResource);
-	matCrackedRock->AddTextureSRV(1, crackedWallResource);
+	std::shared_ptr<Material> matCushion = std::make_shared<Material>("Cushion", XMFLOAT4(1, 1, 1, 1), 0.5f, firstVertexShader, firstPixelShader, XMFLOAT2(2, 2), XMFLOAT2(0, 0));
+	matCushion->AddSampler(0, samplerState);
+	matCushion->AddTextureSRV(0, cushionResource);
+	matCushion->AddTextureSRV(1, flatNormalsResource);
+
+	std::shared_ptr<Material> matCobblestone = std::make_shared<Material>("Cobblestone", XMFLOAT4(1, 1, 1, 1), 0.9f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
+	matCobblestone->AddSampler(0, samplerState);
+	matCobblestone->AddTextureSRV(0, cobblestoneResource);
+	matCobblestone->AddTextureSRV(1, flatNormalsResource);
+	//matCobblestone->AddTextureSRV(1, crackedWallResource); // overlay with additional texture
+
+	// Normal map materials
+	std::shared_ptr<Material> matRockNormalMap = std::make_shared<Material>("Rock with Normals", XMFLOAT4(1, 1, 1, 1), 0.3f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
+	matRockNormalMap->AddSampler(0, samplerState);
+	matRockNormalMap->AddTextureSRV(0, rockResource);
+	matRockNormalMap->AddTextureSRV(1, rockNormalsResource);
+
+	std::shared_ptr<Material> matCushionNormalMap = std::make_shared<Material>("Cushion with Normals", XMFLOAT4(1, 1, 1, 1), 0.9f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
+	matCushionNormalMap->AddSampler(0, samplerState);
+	matCushionNormalMap->AddTextureSRV(0, cushionResource);
+	matCushionNormalMap->AddTextureSRV(1, cushionNormalsResource);
+
+	std::shared_ptr<Material> matCobblestoneNormalMap = std::make_shared<Material>("Cobblestone with Normals", XMFLOAT4(1, 1, 1, 1), 0.3f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
+	matCobblestoneNormalMap->AddSampler(0, samplerState);
+	matCobblestoneNormalMap->AddTextureSRV(0, cobblestoneResource);
+	matCobblestoneNormalMap->AddTextureSRV(1, cobblestoneNormalsResource);
 		
-	materials.insert(materials.end(), { matRock, matWood, matCrackedRock });
+	materials.insert(materials.end(), { matRock, matCushion, matCobblestone, matRockNormalMap, matCushionNormalMap, matCobblestoneNormalMap });
 
 	// Load Meshes
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>("Cube", FixPath(L"../../Assets/Meshes/cube.obj").c_str());
@@ -304,25 +331,25 @@ void Game::CreateGeometry()
 
 	//std::shared_ptr<GameEntity> cube1 = std::make_shared<GameEntity>(cube, matNormals);
 	//std::shared_ptr<GameEntity> cube2 = std::make_shared<GameEntity>(cube, matUV);
-	std::shared_ptr<GameEntity> cube3 = std::make_shared<GameEntity>(cube, matWood);
+	std::shared_ptr<GameEntity> cube3 = std::make_shared<GameEntity>(cube, matCobblestoneNormalMap);
 	//std::shared_ptr<GameEntity> cylinder1 = std::make_shared<GameEntity>(cylinder, matNormals);
 	//std::shared_ptr<GameEntity> cylinder2 = std::make_shared<GameEntity>(cylinder, matUV);
-	std::shared_ptr<GameEntity> cylinder3 = std::make_shared<GameEntity>(cylinder, matCrackedRock);
+	std::shared_ptr<GameEntity> cylinder3 = std::make_shared<GameEntity>(cylinder, matRockNormalMap);
 	//std::shared_ptr<GameEntity> helix1 = std::make_shared<GameEntity>(helix, matNormals);
 	//std::shared_ptr<GameEntity> helix2 = std::make_shared<GameEntity>(helix, matUV);
-	std::shared_ptr<GameEntity> helix3 = std::make_shared<GameEntity>(helix, matWood);
+	std::shared_ptr<GameEntity> helix3 = std::make_shared<GameEntity>(helix, matCobblestoneNormalMap);
 	//std::shared_ptr<GameEntity> sphere1 = std::make_shared<GameEntity>(sphere, matNormals);
 	//std::shared_ptr<GameEntity> sphere2 = std::make_shared<GameEntity>(sphere, matUV);
-	std::shared_ptr<GameEntity> sphere3 = std::make_shared<GameEntity>(sphere, matRock);
+	std::shared_ptr<GameEntity> sphere3 = std::make_shared<GameEntity>(sphere, matCushionNormalMap);
 	//std::shared_ptr<GameEntity> torus1 = std::make_shared<GameEntity>(torus, matNormals);
 	//std::shared_ptr<GameEntity> torus2 = std::make_shared<GameEntity>(torus, matUV);
-	std::shared_ptr<GameEntity> torus3 = std::make_shared<GameEntity>(torus, matWood);
+	std::shared_ptr<GameEntity> torus3 = std::make_shared<GameEntity>(torus, matRockNormalMap);
 	//std::shared_ptr<GameEntity> quad1 = std::make_shared<GameEntity>(quad, matNormals);
 	//std::shared_ptr<GameEntity> quad2 = std::make_shared<GameEntity>(quad, matUV);
-	std::shared_ptr<GameEntity> quad3 = std::make_shared<GameEntity>(quad, matRock);
+	std::shared_ptr<GameEntity> quad3 = std::make_shared<GameEntity>(quad, matCobblestoneNormalMap);
 	//std::shared_ptr<GameEntity> quad_double_sided1 = std::make_shared<GameEntity>(quad_double_sided, matNormals);
 	//std::shared_ptr<GameEntity> quad_double_sided2 = std::make_shared<GameEntity>(quad_double_sided, matUV);
-	std::shared_ptr<GameEntity> quad_double_sided3 = std::make_shared<GameEntity>(quad_double_sided, matWood);
+	std::shared_ptr<GameEntity> quad_double_sided3 = std::make_shared<GameEntity>(quad_double_sided, matCushionNormalMap);
 
 	//cube1->GetTransform().MoveAbsolute(15.0f, 5.0f, -10.0f);
 	//cube2->GetTransform().MoveAbsolute(15.0f, 0.0f, -10.0f);

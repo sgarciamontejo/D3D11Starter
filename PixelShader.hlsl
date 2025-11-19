@@ -19,6 +19,8 @@ cbuffer ExternalData : register(b0)
 
 // Example Texture2D and SamplerState definitions in an HLSL pixel shader
 Texture2D SurfaceColor : register(t0); // A texture assigned to texture slot 0
+Texture2D NormalMap : register(t1); // Normals texture slot 1
+
 SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 0
 
 // --------------------------------------------------------
@@ -33,9 +35,20 @@ SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 
 float4 main(VertexToPixel input) : SV_TARGET
 {
     input.normal = normalize(input.normal);
+    input.tangent = normalize(input.tangent);
     input.uv = input.uv * uvScale + uvOffset;
     float3 surfaceColor = SurfaceColor.Sample(BasicSampler, input.uv).rgb;
     surfaceColor *= colorTint.rgb;
+    
+    // unpack normal map
+    float3 unpackedNormal = NormalMap.Sample(BasicSampler, input.uv).rgb * 2 - 1;
+    float3 N = normalize(input.normal);
+    float3 T = normalize(input.tangent - dot(input.tangent, N) * N);
+    float3 B = cross(T, N);
+    
+    float3x3 TBN = float3x3(T, B, N); // convert to world space
+    input.normal = normalize(mul(unpackedNormal, TBN));
+
     
     //float specularScale = SpecularMap.Sample(BasicSampler, input.uv).r;
     
