@@ -22,6 +22,8 @@ struct Light
     float2 Padding; // 16 byte boundary
 };
 
+static const float F0_NON_METAL = 0.04f;
+
 // Struct representing the data we expect to receive from earlier pipeline stages
 // - Should match the output of our corresponding vertex shader
 // - The name of the struct itself is unimportant
@@ -41,6 +43,13 @@ struct VertexToPixel
     float3 worldPos : POSITION;
 };
 
+// redefine V to P struct
+struct VertexToPixel_Sky
+{
+    float4 position : SV_POSITION;
+    float3 sampleDir : DIRECTION;
+};
+
 // Struct representing a single vertex worth of data
 // - This should match the vertex definition in our C++ code
 // - By "match", I mean the size, order and number of members
@@ -58,6 +67,19 @@ struct VertexShaderInput
     float3 normal : NORMAL;
     float3 tangent : TANGENT;
 };
+
+// Fresnel term - Schlick approximation
+// n = normal
+// v = view vector
+// f0 = specular value (0.04 for nonmetal)
+// F(n, v, f0) = f0 + (1-f0)(1 - (n dot v))^5
+float SimpleFresnel(float3 n, float3 v, float f0)
+{
+    float NdotV = saturate(dot(n, v));
+    
+    return f0 + (1 - f0) * pow(1 - NdotV, 5);
+
+}
 
 float SpecularPhong(float3 normal, float3 lightDir, float3 camDir, float roughness)
 {

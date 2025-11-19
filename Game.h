@@ -10,6 +10,7 @@
 #include "Camera.h"
 #include "Lights.h"
 #include <vector>
+#include "Sky.h"
 
 class Game
 {
@@ -44,6 +45,9 @@ private:
 	// New Geometry
 	std::vector<std::shared_ptr<Mesh>> meshes;
 
+	// Sky
+	std::shared_ptr<Sky> sky;
+
 	// Game Entities
 	std::vector<std::shared_ptr<GameEntity>> entities;
 
@@ -59,19 +63,7 @@ private:
 	//  - This is a smart pointer for objects that abide by the
 	//     Component Object Model, which DirectX objects do
 	//  - More info here: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
-
-	// Buffers to hold actual geometry data
-	/*Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;*/
-
-	// Shaders and shader-related constructs
-	//Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
-	//Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
-
-	// Const Buffers
-	//Microsoft::WRL::ComPtr<ID3D11Buffer> vs_constBuffer;
-	//Microsoft::WRL::ComPtr<ID3D11Buffer> ps_constBuffer;
 
 	std::vector<std::shared_ptr<Material>> materials;
 

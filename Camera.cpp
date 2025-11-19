@@ -46,8 +46,8 @@ void Camera::Update(float dt)
 {
     float camSpeed = dt * speed;
     // input handling
-    if (Input::KeyDown(VK_SHIFT)) { camSpeed *= 3; }
-    if (Input::KeyDown(VK_CONTROL)) { camSpeed *= 0.1; }
+    if (Input::KeyDown(VK_SHIFT)) { camSpeed *= 3.0f; }
+    if (Input::KeyDown(VK_CONTROL)) { camSpeed *= 0.1f; }
     if (Input::KeyDown('W')) { transform.MoveRelative(XMFLOAT3(0, 0, camSpeed)); }
     if (Input::KeyDown('S')) { transform.MoveRelative(XMFLOAT3(0, 0, -camSpeed)); }
     if (Input::KeyDown('A')) { transform.MoveRelative(XMFLOAT3(-camSpeed, 0, 0)); }

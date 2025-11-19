@@ -4,6 +4,7 @@
 #include "Mesh.h"
 #include "PathHelpers.h"
 #include "Window.h"
+#include "Sky.h"
 
 #include <DirectXMath.h>
 
@@ -26,27 +27,6 @@ using namespace DirectX;
 // --------------------------------------------------------
 Game::Game()
 {
-	//// Create Vertex Shader Constant Buffer
-	//// Calculate byte width
-	//unsigned int vsSize = sizeof(VertexShaderData);
-	//vsSize = (vsSize + 15) / 16 * 16;
-	//D3D11_BUFFER_DESC cbDesc = {};
-	//cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	//cbDesc.ByteWidth = vsSize;
-	//cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	//cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	//Graphics::Device->CreateBuffer(&cbDesc, 0, vs_constBuffer.GetAddressOf());
-
-	//// Create Pixel Shader Constant Buffer
-	//unsigned int psSize = sizeof(PixelShaderData);
-	//psSize = (psSize + 15) / 16 * 16;
-	//D3D11_BUFFER_DESC ps_cbDesc = {};
-	//ps_cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	//ps_cbDesc.ByteWidth = psSize;
-	//ps_cbDesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
-	//ps_cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	//Graphics::Device->CreateBuffer(&ps_cbDesc, 0, ps_constBuffer.GetAddressOf());
-
 	// Initialize ImGui itself & platform/renderer backends
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -125,16 +105,6 @@ Game::Game()
 		// the vertex buffer. For this course, all of your vertices will probably
 		// have the same layout, so we can just set this once at startup.
 		Graphics::Context->IASetInputLayout(inputLayout.Get());
-
-		// Set the active vertex and pixel shaders
-		//  - Once you start applying different shaders to different objects,
-		//    these calls will need to happen multiple times per frame
-		//Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
-		//Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
-
-		// Set Const Buffer
-		//Graphics::Context->VSSetConstantBuffers(0, 1, vs_constBuffer.GetAddressOf());
-		//Graphics::Context->PSSetConstantBuffers(0, 1, ps_constBuffer.GetAddressOf());
 	}
 }
 
@@ -152,37 +122,6 @@ Game::~Game()
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 }
-
-
-//Microsoft::WRL::ComPtr<ID3D11VertexShader> LoadVertexShader(std::wstring filePath) {
-//	ID3DBlob* vertexShaderBlob;
-//	Microsoft::WRL::ComPtr<ID3D11VertexShader> shader;
-//
-//	D3DReadFileToBlob(FixPath(filePath).c_str(), &vertexShaderBlob);
-//	Graphics::Device->CreateVertexShader(
-//		vertexShaderBlob->GetBufferPointer(),	// Pointer to start of binary data
-//		vertexShaderBlob->GetBufferSize(),		// How big is the data
-//		0,										// No classes in the shader
-//		shader.GetAddressOf()					// ID3D11VertexShader**
-//	);
-//
-//	return shader;
-//}
-//
-//Microsoft::WRL::ComPtr<ID3D11PixelShader> LoadPixelShader(std::wstring filePath) {
-//	ID3DBlob* pixelShaderBlob;
-//	Microsoft::WRL::ComPtr<ID3D11PixelShader> shader;
-//
-//	D3DReadFileToBlob(FixPath(filePath).c_str(), &pixelShaderBlob);
-//	Graphics::Device->CreatePixelShader(
-//		pixelShaderBlob->GetBufferPointer(),	// Pointer to start of binary data
-//		pixelShaderBlob->GetBufferSize(),		// How big is the data
-//		0,										// No classes in the shader
-//		shader.GetAddressOf()					// ID3D11PixelShader**
-//	);
-//	
-//	return shader;
-//}
 
 // --------------------------------------------------------
 // Creates the geometry we're going to draw
@@ -269,9 +208,36 @@ void Game::CreateGeometry()
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> firstVertexShader = Graphics::LoadVertexShader(FixPath(L"VertexShader.cso").c_str());
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> firstPixelShader = Graphics::LoadPixelShader(FixPath(L"PixelShader.cso").c_str());
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> comboPixelShader = Graphics::LoadPixelShader(FixPath(L"ComboPS.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> skyPixelShader = Graphics::LoadPixelShader(FixPath(L"SkyPS.cso").c_str());
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> skyVertexShader = Graphics::LoadVertexShader(FixPath(L"SkyVS.cso").c_str());
 	/*Microsoft::WRL::ComPtr<ID3D11PixelShader> uvPixelShader = LoadPixelShader(L"DebugUVsPS.cso");
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> normalsPixelShader = LoadPixelShader(L"DebugNormalsPS.cso");
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> customPixelShader = LoadPixelShader(L"CustomPS.cso");*/
+
+	// Load Meshes
+	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>("Cube", FixPath(L"../../Assets/Meshes/cube.obj").c_str());
+	std::shared_ptr<Mesh> cylinder = std::make_shared<Mesh>("Cylinder", FixPath(L"../../Assets/Meshes/cylinder.obj").c_str());
+	std::shared_ptr<Mesh> helix = std::make_shared<Mesh>("Helix", FixPath(L"../../Assets/Meshes/helix.obj").c_str());
+	std::shared_ptr<Mesh> quad = std::make_shared<Mesh>("Quad", FixPath(L"../../Assets/Meshes/quad.obj").c_str());
+	std::shared_ptr<Mesh> quad_double_sided = std::make_shared<Mesh>("Quad Double Sided", FixPath(L"../../Assets/Meshes/quad_double_sided.obj").c_str());
+	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>("Sphere", FixPath(L"../../Assets/Meshes/sphere.obj").c_str());
+	std::shared_ptr<Mesh> torus = std::make_shared<Mesh>("Torus", FixPath(L"../../Assets/Meshes/torus.obj").c_str());
+
+	// Got this from the demo code, good shortcut to remember
+	meshes.insert(meshes.end(), { cube, cylinder, helix, quad, quad_double_sided, sphere, torus });
+
+	// Load Sky resources
+	sky = std::make_shared<Sky>(
+		FixPath(L"../../Assets/Skies/Planet/right.png").c_str(),
+		FixPath(L"../../Assets/Skies/Planet/left.png").c_str(),
+		FixPath(L"../../Assets/Skies/Planet/up.png").c_str(),
+		FixPath(L"../../Assets/Skies/Planet/down.png").c_str(),
+		FixPath(L"../../Assets/Skies/Planet/front.png").c_str(),
+		FixPath(L"../../Assets/Skies/Planet/back.png").c_str(),
+		cube,
+		skyVertexShader,
+		skyPixelShader,
+		samplerState);
 
 	// Create Materials
 	//std::shared_ptr<Material> matRed = std::make_shared<Material>("Red", red, firstVertexShader, firstPixelShader);
@@ -282,7 +248,7 @@ void Game::CreateGeometry()
 	//std::shared_ptr<Material> matNormals = std::make_shared<Material>("Normals", XMFLOAT4(1, 1, 1, 1), firstVertexShader, normalsPixelShader);
 	//std::shared_ptr<Material> matCustom = std::make_shared<Material>("Custom", XMFLOAT4(1, 1, 1, 1), firstVertexShader, customPixelShader);
 
-	std::shared_ptr<Material> matRock = std::make_shared<Material>("Rock", XMFLOAT4(1, 1, 1, 1), 0.8f, firstVertexShader, firstPixelShader, XMFLOAT2(1,1), XMFLOAT2(0, 0));
+	std::shared_ptr<Material> matRock = std::make_shared<Material>("Rock", XMFLOAT4(1, 1, 1, 1), 0.8f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
 	matRock->AddSampler(0, samplerState);
 	matRock->AddTextureSRV(0, rockResource);
 	matRock->AddTextureSRV(1, flatNormalsResource);
@@ -313,43 +279,50 @@ void Game::CreateGeometry()
 	matCobblestoneNormalMap->AddSampler(0, samplerState);
 	matCobblestoneNormalMap->AddTextureSRV(0, cobblestoneResource);
 	matCobblestoneNormalMap->AddTextureSRV(1, cobblestoneNormalsResource);
-		
-	materials.insert(materials.end(), { matRock, matCushion, matCobblestone, matRockNormalMap, matCushionNormalMap, matCobblestoneNormalMap });
 
-	// Load Meshes
-	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>("Cube", FixPath(L"../../Assets/Meshes/cube.obj").c_str());
-	std::shared_ptr<Mesh> cylinder = std::make_shared<Mesh>("Cylinder", FixPath(L"../../Assets/Meshes/cylinder.obj").c_str());
-	std::shared_ptr<Mesh> helix = std::make_shared<Mesh>("Helix", FixPath(L"../../Assets/Meshes/helix.obj").c_str());
-	std::shared_ptr<Mesh> quad = std::make_shared<Mesh>("Quad", FixPath(L"../../Assets/Meshes/quad.obj").c_str());
-	std::shared_ptr<Mesh> quad_double_sided = std::make_shared<Mesh>("Quad Double Sided", FixPath(L"../../Assets/Meshes/quad_double_sided.obj").c_str());
-	std::shared_ptr<Mesh> sphere = std::make_shared<Mesh>("Sphere", FixPath(L"../../Assets/Meshes/sphere.obj").c_str());
-	std::shared_ptr<Mesh> torus = std::make_shared<Mesh>("Torus", FixPath(L"../../Assets/Meshes/torus.obj").c_str());
+	// Normal map + Environment map materials
+	std::shared_ptr<Material> matRockEnvMap = std::make_shared<Material>("Rock with Env Map", XMFLOAT4(1, 1, 1, 1), 0.3f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
+	matRockEnvMap->AddSampler(0, samplerState);
+	matRockEnvMap->AddTextureSRV(0, rockResource);
+	matRockEnvMap->AddTextureSRV(1, rockNormalsResource);
+	matRockEnvMap->AddTextureSRV(2, sky->GetTexture());
 
-	// Got this from the demo code, good shortcut to remember
-	meshes.insert(meshes.end(), { cube, cylinder, helix, quad, quad_double_sided, sphere, torus });
+	std::shared_ptr<Material> matCushionEnvMap = std::make_shared<Material>("Cushion with Env Map", XMFLOAT4(1, 1, 1, 1), 0.9f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
+	matCushionEnvMap->AddSampler(0, samplerState);
+	matCushionEnvMap->AddTextureSRV(0, cushionResource);
+	matCushionEnvMap->AddTextureSRV(1, cushionNormalsResource);
+	matCushionEnvMap->AddTextureSRV(2, sky->GetTexture());
+
+	std::shared_ptr<Material> matCobblestoneEnvMap = std::make_shared<Material>("Cobblestone with Env Map", XMFLOAT4(1, 1, 1, 1), 0.3f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
+	matCobblestoneEnvMap->AddSampler(0, samplerState);
+	matCobblestoneEnvMap->AddTextureSRV(0, cobblestoneResource);
+	matCobblestoneEnvMap->AddTextureSRV(1, cobblestoneNormalsResource);
+	matCobblestoneEnvMap->AddTextureSRV(2, sky->GetTexture());
+
+	materials.insert(materials.end(), { matRock, matCushion, matCobblestone, matRockNormalMap, matCushionNormalMap, matCobblestoneNormalMap, matRockEnvMap, matCushionEnvMap, matCobblestoneEnvMap });
 
 
 	//std::shared_ptr<GameEntity> cube1 = std::make_shared<GameEntity>(cube, matNormals);
 	//std::shared_ptr<GameEntity> cube2 = std::make_shared<GameEntity>(cube, matUV);
-	std::shared_ptr<GameEntity> cube3 = std::make_shared<GameEntity>(cube, matCobblestoneNormalMap);
+	std::shared_ptr<GameEntity> cube3 = std::make_shared<GameEntity>(cube, matCobblestoneEnvMap);
 	//std::shared_ptr<GameEntity> cylinder1 = std::make_shared<GameEntity>(cylinder, matNormals);
 	//std::shared_ptr<GameEntity> cylinder2 = std::make_shared<GameEntity>(cylinder, matUV);
-	std::shared_ptr<GameEntity> cylinder3 = std::make_shared<GameEntity>(cylinder, matRockNormalMap);
+	std::shared_ptr<GameEntity> cylinder3 = std::make_shared<GameEntity>(cylinder, matRockEnvMap);
 	//std::shared_ptr<GameEntity> helix1 = std::make_shared<GameEntity>(helix, matNormals);
 	//std::shared_ptr<GameEntity> helix2 = std::make_shared<GameEntity>(helix, matUV);
-	std::shared_ptr<GameEntity> helix3 = std::make_shared<GameEntity>(helix, matCobblestoneNormalMap);
+	std::shared_ptr<GameEntity> helix3 = std::make_shared<GameEntity>(helix, matCobblestoneEnvMap);
 	//std::shared_ptr<GameEntity> sphere1 = std::make_shared<GameEntity>(sphere, matNormals);
 	//std::shared_ptr<GameEntity> sphere2 = std::make_shared<GameEntity>(sphere, matUV);
-	std::shared_ptr<GameEntity> sphere3 = std::make_shared<GameEntity>(sphere, matCushionNormalMap);
+	std::shared_ptr<GameEntity> sphere3 = std::make_shared<GameEntity>(sphere, matCushionEnvMap);
 	//std::shared_ptr<GameEntity> torus1 = std::make_shared<GameEntity>(torus, matNormals);
 	//std::shared_ptr<GameEntity> torus2 = std::make_shared<GameEntity>(torus, matUV);
-	std::shared_ptr<GameEntity> torus3 = std::make_shared<GameEntity>(torus, matRockNormalMap);
+	std::shared_ptr<GameEntity> torus3 = std::make_shared<GameEntity>(torus, matRockEnvMap);
 	//std::shared_ptr<GameEntity> quad1 = std::make_shared<GameEntity>(quad, matNormals);
 	//std::shared_ptr<GameEntity> quad2 = std::make_shared<GameEntity>(quad, matUV);
-	std::shared_ptr<GameEntity> quad3 = std::make_shared<GameEntity>(quad, matCobblestoneNormalMap);
+	std::shared_ptr<GameEntity> quad3 = std::make_shared<GameEntity>(quad, matCobblestoneEnvMap);
 	//std::shared_ptr<GameEntity> quad_double_sided1 = std::make_shared<GameEntity>(quad_double_sided, matNormals);
 	//std::shared_ptr<GameEntity> quad_double_sided2 = std::make_shared<GameEntity>(quad_double_sided, matUV);
-	std::shared_ptr<GameEntity> quad_double_sided3 = std::make_shared<GameEntity>(quad_double_sided, matCushionNormalMap);
+	std::shared_ptr<GameEntity> quad_double_sided3 = std::make_shared<GameEntity>(quad_double_sided, matCushionEnvMap);
 
 	//cube1->GetTransform().MoveAbsolute(15.0f, 5.0f, -10.0f);
 	//cube2->GetTransform().MoveAbsolute(15.0f, 0.0f, -10.0f);
@@ -486,6 +459,9 @@ void Game::Draw(float deltaTime, float totalTime)
 			entity->Draw();
 		}
 
+		// draw sky after normal entities
+		sky->Draw(activeCamera);
+
 		ImGui::Render(); // Turns this frame’s UI into renderable triangles
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
 	}
@@ -617,14 +593,14 @@ void Game::BuildUI() {
 
 	//Lights
 	if (ImGui::TreeNode("Lights")) {
-		if (ImGui::ColorEdit3("Ambience", &ambientLight.x));
+		if (ImGui::ColorEdit3("Ambience", &ambientLight.x)) {}
 
 		for (int i = 0; i < lights.size(); i++) {
 			ImGui::PushID(&lights[i]);
 
 			if (ImGui::TreeNode("Light Node", "Light %d", i + 1)) {
-				if (ImGui::ColorEdit3("Color", &lights[i].Color.x));
-				if (ImGui::DragFloat("Intensity", &lights[i].Intensity));
+				if (ImGui::ColorEdit3("Color", &lights[i].Color.x)) {}
+				if (ImGui::DragFloat("Intensity", &lights[i].Intensity)) {}
 
 				ImGui::TreePop();
 			}

@@ -20,6 +20,7 @@ cbuffer ExternalData : register(b0)
 // Example Texture2D and SamplerState definitions in an HLSL pixel shader
 Texture2D SurfaceColor : register(t0); // A texture assigned to texture slot 0
 Texture2D NormalMap : register(t1); // Normals texture slot 1
+TextureCube EnvironmentMap : register(t2);
 
 SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 0
 
@@ -77,9 +78,16 @@ float4 main(VertexToPixel input) : SV_TARGET
 
     }
     
+    // Sample environment map using reflected view vector
+    float3 viewVector = normalize(cameraPos - input.worldPos);
+    float3 reflectionVector = reflect(-viewVector, input.normal); // Cam to pixel vector (negate)
+    float3 reflectionColor = EnvironmentMap.Sample(BasicSampler, reflectionVector).rgb;
+    
+    float3 finalColor = lerp(totalLight, reflectionColor, SimpleFresnel(input.normal, viewVector, F0_NON_METAL));
+    
     //totalLight += (surfaceColor * (diffuse + spec)) * dirLight.Intensity * dirLight.Color; // tint specular
     //totalLight += (surfaceColor * diffuse + spec) * dirLight.Intensity * dirLight.Color; // dont tint specular
     
-    return float4(totalLight, 1);
+    return float4(finalColor, 1);
     //return float4(input.normal, 1);
 }
