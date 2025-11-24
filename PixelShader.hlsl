@@ -53,7 +53,8 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3x3 TBN = float3x3(T, B, N); // convert to world space
     input.normal = normalize(mul(unpackedNormal, TBN));
 
-    
+    float roughness = RoughnessMap.Sample(SamplerOptions, input.uv).r;
+    float metalness = MetalnessMap.Sample(SamplerOptions, input.uv).r;
     //float specularScale = SpecularMap.Sample(BasicSampler, input.uv).r;
     
     float3 totalLight = ambientLight * surfaceColor;

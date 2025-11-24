@@ -5,6 +5,7 @@
 #define LIGHT_TYPE_SPOT			2
 #define MAX_SPECULAR_EXPONENT   256.0f
 #define MIN_ROUGHNESS           0.0000001
+#define PI                      3.14
 
 
 // structs and funcs definitions
