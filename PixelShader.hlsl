@@ -18,9 +18,12 @@ cbuffer ExternalData : register(b0)
 }
 
 // Example Texture2D and SamplerState definitions in an HLSL pixel shader
-Texture2D SurfaceColor : register(t0); // A texture assigned to texture slot 0
+Texture2D Albedo : register(t0); // A texture assigned to texture slot 0
 Texture2D NormalMap : register(t1); // Normals texture slot 1
-TextureCube EnvironmentMap : register(t2);
+Texture2D RoughnessMap : register(t2); // Roughness texture slot 2
+Texture2D MetalnessMap : register(t3); // Metallness texture slot 3
+
+TextureCube EnvironmentMap : register(t4);
 
 SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 0
 
@@ -38,7 +41,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     input.normal = normalize(input.normal);
     input.tangent = normalize(input.tangent);
     input.uv = input.uv * uvScale + uvOffset;
-    float3 surfaceColor = SurfaceColor.Sample(BasicSampler, input.uv).rgb;
+    float3 surfaceColor = pow(Albedo.Sample(BasicSampler, input.uv).rgb, 2.2);
     surfaceColor *= colorTint.rgb;
     
     // unpack normal map
@@ -88,6 +91,6 @@ float4 main(VertexToPixel input) : SV_TARGET
     //totalLight += (surfaceColor * (diffuse + spec)) * dirLight.Intensity * dirLight.Color; // tint specular
     //totalLight += (surfaceColor * diffuse + spec) * dirLight.Intensity * dirLight.Color; // dont tint specular
     
-    return float4(finalColor, 1);
+    return float4(pow(finalColor, 1 / 2.2), 1); // gamma correction
     //return float4(input.normal, 1);
 }

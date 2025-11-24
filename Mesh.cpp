@@ -231,6 +231,7 @@ Mesh::Mesh(const char* name, const std::wstring& objFile) {
 	// Close the file and create the actual buffers
 	obj.close();
 	printf("Name: %s \nVertices: %i\n\n", name, numVertices);
+	CalculateTangents(&verts[0], numVertices, &indices[0], numIndices);
 	CreateBuffers(&verts[0], numVertices, &indices[0], numIndices);
 	// *************************************
 	//      IMPLEMENTATION NOTES (2/2)
