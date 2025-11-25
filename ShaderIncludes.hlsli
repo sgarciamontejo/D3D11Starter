@@ -5,7 +5,7 @@
 #define LIGHT_TYPE_SPOT			2
 #define MAX_SPECULAR_EXPONENT   256.0f
 #define MIN_ROUGHNESS           0.0000001
-#define PI                      3.14
+#define PI                      3.14159265359f
 
 
 // structs and funcs definitions
@@ -70,18 +70,64 @@ struct VertexShaderInput
     float3 tangent : TANGENT;
 };
 
-// Fresnel term - Schlick approximation
+
+// PBR Lighting Calculations
+// Cook-Terrence BRDF
+// spec(v,l) = D(n,h,a)F(v,h,f0)G(n,v,l,a) / 4(n * v)(n * l)
+//
+// Normal Distribution - Trowbridge-Reitz (GGX)
+float D_GGX(float3 n, float3 h, float roughness)
+{
+    // Pre-calculations
+    float NdotH = saturate(dot(n, h));
+    float NdotH2 = NdotH * NdotH;
+    float a = roughness * roughness; // Remapping roughness
+    float a2 = max(a * a, MIN_ROUGHNESS);
+    // Denominator to be squared is ((n dot h)^2 * (a^2 - 1) + 1)
+    float denomToSquare = NdotH2 * (a2 - 1) + 1;
+    return a2 / (PI * denomToSquare * denomToSquare);
+}
+
+// Geometric Shawing - Schlick GGX
+float G_SchlickGGX(float3 n, float3 v, float roughness)
+{
+    float k = pow(roughness + 1, 2) / 8.0f; // End result of remaps
+    float NdotV = saturate(dot(n, v));
+    return 1 / (NdotV * (1 - k) + k);
+}
+
+// Fresnel - Schlick's Approximation
 // n = normal
 // v = view vector
 // f0 = specular value (0.04 for nonmetal)
 // F(n, v, f0) = f0 + (1-f0)(1 - (n dot v))^5
-float SimpleFresnel(float3 n, float3 v, float f0)
+float3 F_Schlick(float3 v, float3 h, float3 f0)
 {
-    float NdotV = saturate(dot(n, v));
-    
-    return f0 + (1 - f0) * pow(1 - NdotV, 5);
-
+    float VdotH = saturate(dot(v, h));
+    return f0 + (1 - f0) * pow(1 - VdotH, 5);
 }
+
+// Microfacet calculation
+// n = normal
+// l = light direction
+// v = cam direction
+float3 MicrofacetBRDF(float3 n, float3 l, float3 v, float roughness, float3 f0)
+{
+    float3 h = normalize(v + l);
+    // Run each function: D and G are scalars, F is a vector
+    float D = D_GGX(n, h, roughness);
+    float3 F = F_Schlick(v, h, f0);
+    float G = G_SchlickGGX(n, v, roughness) * G_SchlickGGX(n, l, roughness);
+    // Final formula
+    return (D * F * G) / 4;
+}
+
+float3 DiffuseEnergyConserve(float3 diffuse, float3 F, float metalness)
+{
+    return diffuse * (1 - F) * (1 - metalness);
+}
+
+//-----------------------
 
 float SpecularPhong(float3 normal, float3 lightDir, float3 camDir, float roughness)
 {
@@ -108,32 +154,44 @@ float Diffuse(float3 normal, float3 lightDir)
     return saturate(dot(normal, lightDir));
 }
 
-float3 DirectionalLight(Light light, float3 normal, float3 worldPos, float3 camPos, float roughness, float3 surfaceColor)
+float3 DirectionalLight(Light light, float3 normal, float3 worldPos, float3 camPos, float roughness, float metalness, float3 surfaceColor, float3 specColor)
 {
     float3 dirToLight = normalize(-light.Direction);
     float3 dirToCam = normalize(camPos - worldPos);
     
     float diffuse = Diffuse(normal, dirToLight);
-    float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness) * any(diffuse);
+    float3 spec = MicrofacetBRDF(normal, dirToLight, dirToCam, roughness, specColor);
+    //float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness) * any(diffuse);
 
+    // Diffuse with Energy conservation - Include cutting diffuse for metals
+    float3 h = normalize(dirToCam + dirToLight);
+    float3 F = F_Schlick(dirToCam, h, specColor);
+    float3 balancedDiff = DiffuseEnergyConserve(diffuse, F, metalness);
     
-    return (surfaceColor * (diffuse + spec)) * light.Intensity * light.Color;
+    return (surfaceColor * (balancedDiff + spec)) * light.Intensity * light.Color;
 }
 
-float3 PointLight(Light light, float3 normal, float3 worldPos, float3 camPos, float roughness, float3 surfaceColor)
+float3 PointLight(Light light, float3 normal, float3 worldPos, float3 camPos, float roughness, float metalness, float3 surfaceColor, float3 specColor)
 {
     //light pos - pixel world pos
     float3 dirToLight = normalize(light.Position - worldPos);
     float3 dirToCam = normalize(camPos - worldPos);
     
     float diffuse = Diffuse(normal, dirToLight);
-    float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness) * any(diffuse);
+    float3 spec = MicrofacetBRDF(normal, dirToLight, dirToCam, roughness, specColor);
+    //float spec = SpecularPhong(normal, dirToLight, dirToCam, roughness) * any(diffuse);
+
+    // Diffuse with Energy conservation - Include cutting diffuse for metals
+    float3 h = normalize(dirToCam + dirToLight);
+    float3 F = F_Schlick(dirToCam, h, specColor);
+    float3 balancedDiff = DiffuseEnergyConserve(diffuse, F, metalness);
+    
     float attenuate = Attenuate(light, worldPos);
     
-    return (surfaceColor * diffuse + spec) * attenuate * light.Intensity * light.Color;
+    return (surfaceColor * (balancedDiff + spec)) * attenuate * light.Intensity * light.Color;
 }
 
-float3 SpotLight(Light light, float3 normal, float3 worldPos, float3 camPos, float roughness, float3 surfaceColor)
+float3 SpotLight(Light light, float3 normal, float3 worldPos, float3 camPos, float roughness, float metalness, float3 surfaceColor, float3 specColor)
 {
     float3 dirToLight = normalize(light.Position - worldPos);
     
@@ -147,51 +205,7 @@ float3 SpotLight(Light light, float3 normal, float3 worldPos, float3 camPos, flo
     
     // linear falloff over range, clamp 0-1 and apply to light calc
     float spotTerm = saturate((cosOuter - pixelAngle) / falloffRange);
-    return PointLight(light, normal, worldPos, camPos, roughness, surfaceColor) * spotTerm;
-}
-
-// PBR Lighting Calculations
-// Cook-Terrence BRDF
-// spec(v,l) = D(n,h,a)F(v,h,f0)G(n,v,l,a) / 4(n * v)(n * l)
-
-// Normal Distribution - Trowbridge-Reitz (GGX)
-float D_GGX(float3 n, float3 h, float roughness)
-{
-    // Pre-calculations
-    float NdotH = saturate(dot(n, h));
-    float NdotH2 = NdotH * NdotH;
-    float a = roughness * roughness; // Remapping roughness
-    float a2 = max(a * a, MIN_ROUGHNESS);
-    // Denominator to be squared is ((n dot h)^2 * (a^2 - 1) + 1)
-    float denomToSquare = NdotH2 * (a2 - 1) + 1;
-    return a2 / (PI * denomToSquare * denomToSquare);
-}
-
-// Geometric Shawing - Schlick GGX
-float G_SchlickGGX(float3 n, float3 v, float roughness)
-{
-    float k = pow(roughness + 1, 2) / 8.0f; // End result of remaps
-    float NdotV = saturate(dot(n, v));
-    return 1 / (NdotV * (1 - k) + k);
-}
-
-// Fresnel - Schlick's Approximation
-float3 F_Schlick(float3 v, float3 h, float3 f0)
-{
-    float VdotH = saturate(dot(v, h));
-    return f0 + (1 - f0) * pow(1 - VdotH, 5);
-}
-
-// Microfacet calculation
-float3 MicrofacetBRDF(float3 n, float3 l, float3 v, float roughness, float3 f0)
-{
-    float3 h = normalize(v + l);
-    // Run each function: D and G are scalars, F is a vector
-    float D = D_GGX(n, h, roughness);
-    float3 F = F_Schlick(v, h, f0);
-    float G = G_SchlickGGX(n, v, roughness) * G_SchlickGGX(n, l, roughness);
-    // Final formula
-    return (D * F * G) / 4;
+    return PointLight(light, normal, worldPos, camPos, roughness, metalness, surfaceColor, specColor) * spotTerm;
 }
 
 #endif

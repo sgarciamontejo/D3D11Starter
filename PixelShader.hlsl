@@ -53,11 +53,18 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3x3 TBN = float3x3(T, B, N); // convert to world space
     input.normal = normalize(mul(unpackedNormal, TBN));
 
-    float roughness = RoughnessMap.Sample(SamplerOptions, input.uv).r;
-    float metalness = MetalnessMap.Sample(SamplerOptions, input.uv).r;
+    float roughness = RoughnessMap.Sample(BasicSampler, input.uv).r;
+    float metalness = MetalnessMap.Sample(BasicSampler, input.uv).r;
     //float specularScale = SpecularMap.Sample(BasicSampler, input.uv).r;
     
+    // Specular color determination -----------------
+    // Assume albedo texture is actually holding specular color where metalness == 1
+    // Note the use of lerp here - metal is generally 0 or 1, but might be in between
+    // because of linear texture sampling, so we lerp the specular color to match
+    float3 specColor = lerp(0.04f, surfaceColor.rgb, metalness);
+    
     float3 totalLight = ambientLight * surfaceColor;
+    //float3 totalLight = surfaceColor;
    
     // diffuse calculation
     for (int i = 0; i < lightCount; i++)
@@ -68,16 +75,16 @@ float4 main(VertexToPixel input) : SV_TARGET
         // directional light
         if (light.Type == 0)
         {
-            totalLight += DirectionalLight(light, input.normal, input.worldPos, cameraPos, roughness, surfaceColor);
+            totalLight += DirectionalLight(light, input.normal, input.worldPos, cameraPos, roughness, metalness, surfaceColor, specColor);
         }
         // point light
         else if (light.Type == 1)
         {
-            totalLight += PointLight(light, input.normal, input.worldPos, cameraPos, roughness, surfaceColor);
+            totalLight += PointLight(light, input.normal, input.worldPos, cameraPos, roughness, metalness, surfaceColor, specColor);
         }
         else if (light.Type == 2)
         {
-            totalLight += SpotLight(light, input.normal, input.worldPos, cameraPos, roughness, surfaceColor);
+            totalLight += SpotLight(light, input.normal, input.worldPos, cameraPos, roughness, metalness, surfaceColor, specColor);
         }
 
     }
@@ -87,7 +94,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 reflectionVector = reflect(-viewVector, input.normal); // Cam to pixel vector (negate)
     float3 reflectionColor = EnvironmentMap.Sample(BasicSampler, reflectionVector).rgb;
     
-    float3 finalColor = lerp(totalLight, reflectionColor, SimpleFresnel(input.normal, viewVector, F0_NON_METAL));
+    float3 finalColor = lerp(totalLight, reflectionColor, F_Schlick(input.normal, viewVector, F0_NON_METAL));
     
     //totalLight += (surfaceColor * (diffuse + spec)) * dirLight.Intensity * dirLight.Color; // tint specular
     //totalLight += (surfaceColor * diffuse + spec) * dirLight.Intensity * dirLight.Color; // dont tint specular

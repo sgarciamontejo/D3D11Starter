@@ -188,26 +188,90 @@ void Game::CreateGeometry()
 	lights.push_back(spotLight1);
 
 	// Load Textures
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockResource;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockNormalsResource;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionResource;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionNormalsResource;
+	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockResource;
+	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockNormalsResource;
+	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockNormalsResource;
+	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionResource;
+	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionNormalsResource;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeNormalsResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeMetalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeRoughnessResource;
+
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobblestoneResource;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobblestoneNormalsResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobblestoneMetalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobblestoneRoughnessResource;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> floorResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> floorNormalsResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> floorMetalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> floorRoughnessResource;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintNormalsResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintMetalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintRoughnessResource;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughNormalsResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughMetalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughRoughnessResource;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedNormalsResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedMetalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedRoughnessResource;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodNormalsResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodMetalResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> woodRoughnessResource;
+
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> flatNormalsResource;
 
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/rock.png").c_str(), 0, rockResource.GetAddressOf());
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/rock_normals.png").c_str(), 0, rockNormalsResource.GetAddressOf());
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/cushion.png").c_str(), 0, cushionResource.GetAddressOf());
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/cushion_normals.png").c_str(), 0, cushionNormalsResource.GetAddressOf());
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/cobblestone.png").c_str(), 0, cobblestoneResource.GetAddressOf());
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/cobblestone_normals.png").c_str(), 0, cobblestoneNormalsResource.GetAddressOf());
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Textures with Normal Maps/flat_normals.png").c_str(), 0, flatNormalsResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/bronze_albedo.png").c_str(), 0, bronzeResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/bronze_normals.png").c_str(), 0, bronzeNormalsResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/bronze_metals.png").c_str(), 0, bronzeMetalResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/bronze_roughness.png").c_str(), 0, bronzeRoughnessResource.GetAddressOf());
+
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/cobblestone_albedo.png").c_str(), 0, cobblestoneResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/cobblestone_normals.png").c_str(), 0, cobblestoneNormalsResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/cobblestone_metal.png").c_str(), 0, cobblestoneMetalResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/cobblestone_roughness.png").c_str(), 0, cobblestoneRoughnessResource.GetAddressOf());
+
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/floor_albedo.png").c_str(), 0, floorResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/floor_normals.png").c_str(), 0, floorNormalsResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/floor_metal.png").c_str(), 0, floorMetalResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/floor_roughness.png").c_str(), 0, floorRoughnessResource.GetAddressOf());
+
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/paint_albedo.png").c_str(), 0, paintResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/paint_normals.png").c_str(), 0, paintNormalsResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/paint_metal.png").c_str(), 0, paintMetalResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/paint_roughness.png").c_str(), 0, paintRoughnessResource.GetAddressOf());
+
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/rough_albedo.png").c_str(), 0, roughResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/rough_normals.png").c_str(), 0, roughNormalsResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/rough_metal.png").c_str(), 0, roughMetalResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/rough_roughness.png").c_str(), 0, roughRoughnessResource.GetAddressOf());
+
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/scratched_albedo.png").c_str(), 0, scratchedResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/scratched_normals.png").c_str(), 0, scratchedNormalsResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/scratched_metal.png").c_str(), 0, scratchedMetalResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/scratched_roughness.png").c_str(), 0, scratchedRoughnessResource.GetAddressOf());
+
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/wood_albedo.png").c_str(), 0, woodResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/wood_normals.png").c_str(), 0, woodNormalsResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/wood_metal.png").c_str(), 0, woodMetalResource.GetAddressOf());
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/wood_roughness.png").c_str(), 0, woodRoughnessResource.GetAddressOf());
+
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/PBR/flat_normals.png").c_str(), 0, flatNormalsResource.GetAddressOf());
 
 	// Load Shaders
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> firstVertexShader = Graphics::LoadVertexShader(FixPath(L"VertexShader.cso").c_str());
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> firstPixelShader = Graphics::LoadPixelShader(FixPath(L"PixelShader.cso").c_str());
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> comboPixelShader = Graphics::LoadPixelShader(FixPath(L"ComboPS.cso").c_str());
+	//Microsoft::WRL::ComPtr<ID3D11PixelShader> comboPixelShader = Graphics::LoadPixelShader(FixPath(L"ComboPS.cso").c_str());
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> skyPixelShader = Graphics::LoadPixelShader(FixPath(L"SkyPS.cso").c_str());
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> skyVertexShader = Graphics::LoadVertexShader(FixPath(L"SkyVS.cso").c_str());
 	/*Microsoft::WRL::ComPtr<ID3D11PixelShader> uvPixelShader = LoadPixelShader(L"DebugUVsPS.cso");
@@ -248,125 +312,147 @@ void Game::CreateGeometry()
 	//std::shared_ptr<Material> matNormals = std::make_shared<Material>("Normals", XMFLOAT4(1, 1, 1, 1), firstVertexShader, normalsPixelShader);
 	//std::shared_ptr<Material> matCustom = std::make_shared<Material>("Custom", XMFLOAT4(1, 1, 1, 1), firstVertexShader, customPixelShader);
 
-	std::shared_ptr<Material> matRock = std::make_shared<Material>("Rock", XMFLOAT4(1, 1, 1, 1), 0.8f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
-	matRock->AddSampler(0, samplerState);
-	matRock->AddTextureSRV(0, rockResource);
-	matRock->AddTextureSRV(1, flatNormalsResource);
+	// Normal map + Metal + Roughness + Environment map materials
+	std::shared_ptr<Material> matBronzeEnvMap = std::make_shared<Material>("Bronze with Env Map", XMFLOAT4(1, 1, 1, 1), 0.8f, firstVertexShader, firstPixelShader, XMFLOAT2(2, 2), XMFLOAT2(0, 0));
+	matBronzeEnvMap->AddSampler(0, samplerState);
+	matBronzeEnvMap->AddTextureSRV(0, bronzeResource);
+	matBronzeEnvMap->AddTextureSRV(1, bronzeNormalsResource);
+	matBronzeEnvMap->AddTextureSRV(2, bronzeRoughnessResource);
+	matBronzeEnvMap->AddTextureSRV(3, bronzeMetalResource);
+	matBronzeEnvMap->AddTextureSRV(4, sky->GetTexture());
 
-	std::shared_ptr<Material> matCushion = std::make_shared<Material>("Cushion", XMFLOAT4(1, 1, 1, 1), 0.5f, firstVertexShader, firstPixelShader, XMFLOAT2(2, 2), XMFLOAT2(0, 0));
-	matCushion->AddSampler(0, samplerState);
-	matCushion->AddTextureSRV(0, cushionResource);
-	matCushion->AddTextureSRV(1, flatNormalsResource);
-
-	std::shared_ptr<Material> matCobblestone = std::make_shared<Material>("Cobblestone", XMFLOAT4(1, 1, 1, 1), 0.9f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
-	matCobblestone->AddSampler(0, samplerState);
-	matCobblestone->AddTextureSRV(0, cobblestoneResource);
-	matCobblestone->AddTextureSRV(1, flatNormalsResource);
-	//matCobblestone->AddTextureSRV(1, crackedWallResource); // overlay with additional texture
-
-	// Normal map materials
-	std::shared_ptr<Material> matRockNormalMap = std::make_shared<Material>("Rock with Normals", XMFLOAT4(1, 1, 1, 1), 0.3f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
-	matRockNormalMap->AddSampler(0, samplerState);
-	matRockNormalMap->AddTextureSRV(0, rockResource);
-	matRockNormalMap->AddTextureSRV(1, rockNormalsResource);
-
-	std::shared_ptr<Material> matCushionNormalMap = std::make_shared<Material>("Cushion with Normals", XMFLOAT4(1, 1, 1, 1), 0.9f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
-	matCushionNormalMap->AddSampler(0, samplerState);
-	matCushionNormalMap->AddTextureSRV(0, cushionResource);
-	matCushionNormalMap->AddTextureSRV(1, cushionNormalsResource);
-
-	std::shared_ptr<Material> matCobblestoneNormalMap = std::make_shared<Material>("Cobblestone with Normals", XMFLOAT4(1, 1, 1, 1), 0.3f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
-	matCobblestoneNormalMap->AddSampler(0, samplerState);
-	matCobblestoneNormalMap->AddTextureSRV(0, cobblestoneResource);
-	matCobblestoneNormalMap->AddTextureSRV(1, cobblestoneNormalsResource);
-
-	// Normal map + Environment map materials
-	std::shared_ptr<Material> matRockEnvMap = std::make_shared<Material>("Rock with Env Map", XMFLOAT4(1, 1, 1, 1), 0.3f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
-	matRockEnvMap->AddSampler(0, samplerState);
-	matRockEnvMap->AddTextureSRV(0, rockResource);
-	matRockEnvMap->AddTextureSRV(1, rockNormalsResource);
-	matRockEnvMap->AddTextureSRV(2, sky->GetTexture());
-
-	std::shared_ptr<Material> matCushionEnvMap = std::make_shared<Material>("Cushion with Env Map", XMFLOAT4(1, 1, 1, 1), 0.9f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
-	matCushionEnvMap->AddSampler(0, samplerState);
-	matCushionEnvMap->AddTextureSRV(0, cushionResource);
-	matCushionEnvMap->AddTextureSRV(1, cushionNormalsResource);
-	matCushionEnvMap->AddTextureSRV(2, sky->GetTexture());
-
-	std::shared_ptr<Material> matCobblestoneEnvMap = std::make_shared<Material>("Cobblestone with Env Map", XMFLOAT4(1, 1, 1, 1), 0.3f, firstVertexShader, firstPixelShader, XMFLOAT2(1, 1), XMFLOAT2(0, 0));
+	std::shared_ptr<Material> matCobblestoneEnvMap = std::make_shared<Material>("Cobblestone with Env Map", XMFLOAT4(1, 1, 1, 1), 0.9f, firstVertexShader, firstPixelShader, XMFLOAT2(2, 2), XMFLOAT2(0, 0));
 	matCobblestoneEnvMap->AddSampler(0, samplerState);
 	matCobblestoneEnvMap->AddTextureSRV(0, cobblestoneResource);
 	matCobblestoneEnvMap->AddTextureSRV(1, cobblestoneNormalsResource);
-	matCobblestoneEnvMap->AddTextureSRV(2, sky->GetTexture());
+	matCobblestoneEnvMap->AddTextureSRV(2, cobblestoneRoughnessResource);
+	matCobblestoneEnvMap->AddTextureSRV(3, cobblestoneMetalResource);
+	matCobblestoneEnvMap->AddTextureSRV(4, sky->GetTexture());
 
-	materials.insert(materials.end(), { matRock, matCushion, matCobblestone, matRockNormalMap, matCushionNormalMap, matCobblestoneNormalMap, matRockEnvMap, matCushionEnvMap, matCobblestoneEnvMap });
+	std::shared_ptr<Material> matFloorEnvMap = std::make_shared<Material>("Floor with Env Map", XMFLOAT4(1, 1, 1, 1), 0.8f, firstVertexShader, firstPixelShader, XMFLOAT2(2, 2), XMFLOAT2(0, 0));
+	matFloorEnvMap->AddSampler(0, samplerState);
+	matFloorEnvMap->AddTextureSRV(0, floorResource);
+	matFloorEnvMap->AddTextureSRV(1, floorNormalsResource);
+	matFloorEnvMap->AddTextureSRV(2, floorRoughnessResource);
+	matFloorEnvMap->AddTextureSRV(3, floorMetalResource);
+	matFloorEnvMap->AddTextureSRV(4, sky->GetTexture());
+
+	std::shared_ptr<Material> matPaintEnvMap = std::make_shared<Material>("Paint with Env Map", XMFLOAT4(1, 1, 1, 1), 0.7f, firstVertexShader, firstPixelShader, XMFLOAT2(2, 2), XMFLOAT2(0, 0));
+	matPaintEnvMap->AddSampler(0, samplerState);
+	matPaintEnvMap->AddTextureSRV(0, paintResource);
+	matPaintEnvMap->AddTextureSRV(1, paintNormalsResource);
+	matPaintEnvMap->AddTextureSRV(2, paintRoughnessResource);
+	matPaintEnvMap->AddTextureSRV(3, paintMetalResource);
+	matPaintEnvMap->AddTextureSRV(4, sky->GetTexture());
+
+	std::shared_ptr<Material> matRoughEnvMap = std::make_shared<Material>("Rough Metal with Env Map", XMFLOAT4(1, 1, 1, 1), 0.7f, firstVertexShader, firstPixelShader, XMFLOAT2(2, 2), XMFLOAT2(0, 0));
+	matRoughEnvMap->AddSampler(0, samplerState);
+	matRoughEnvMap->AddTextureSRV(0, roughResource);
+	matRoughEnvMap->AddTextureSRV(1, roughNormalsResource);
+	matRoughEnvMap->AddTextureSRV(2, roughRoughnessResource);
+	matRoughEnvMap->AddTextureSRV(3, roughMetalResource);
+	matRoughEnvMap->AddTextureSRV(4, sky->GetTexture());
+
+	std::shared_ptr<Material> matScratchedEnvMap = std::make_shared<Material>("Scratched Metal with Env Map", XMFLOAT4(1, 1, 1, 1), 0.8f, firstVertexShader, firstPixelShader, XMFLOAT2(2, 2), XMFLOAT2(0, 0));
+	matScratchedEnvMap->AddSampler(0, samplerState);
+	matScratchedEnvMap->AddTextureSRV(0, scratchedResource);
+	matScratchedEnvMap->AddTextureSRV(1, scratchedNormalsResource);
+	matScratchedEnvMap->AddTextureSRV(2, scratchedRoughnessResource);
+	matScratchedEnvMap->AddTextureSRV(3, scratchedMetalResource);
+	matScratchedEnvMap->AddTextureSRV(4, sky->GetTexture());
+
+	std::shared_ptr<Material> matWoodEnvMap = std::make_shared<Material>("Wood Metal with Env Map", XMFLOAT4(1, 1, 1, 1), 0.8f, firstVertexShader, firstPixelShader, XMFLOAT2(0.5f, 0.5f), XMFLOAT2(0, 0));
+	matWoodEnvMap->AddSampler(0, samplerState);
+	matWoodEnvMap->AddTextureSRV(0, woodResource);
+	matWoodEnvMap->AddTextureSRV(1, woodNormalsResource);
+	matWoodEnvMap->AddTextureSRV(2, woodRoughnessResource);
+	matWoodEnvMap->AddTextureSRV(3, woodMetalResource);
+	matWoodEnvMap->AddTextureSRV(4, sky->GetTexture());
+
+	materials.insert(materials.end(), { matBronzeEnvMap, matCobblestoneEnvMap, matFloorEnvMap, matPaintEnvMap, matRoughEnvMap, matScratchedEnvMap, matWoodEnvMap });
 
 
 	//std::shared_ptr<GameEntity> cube1 = std::make_shared<GameEntity>(cube, matNormals);
 	//std::shared_ptr<GameEntity> cube2 = std::make_shared<GameEntity>(cube, matUV);
-	std::shared_ptr<GameEntity> cube3 = std::make_shared<GameEntity>(cube, matCobblestoneEnvMap);
+	//std::shared_ptr<GameEntity> cube3 = std::make_shared<GameEntity>(cube, matCobblestoneEnvMap);
 	//std::shared_ptr<GameEntity> cylinder1 = std::make_shared<GameEntity>(cylinder, matNormals);
 	//std::shared_ptr<GameEntity> cylinder2 = std::make_shared<GameEntity>(cylinder, matUV);
-	std::shared_ptr<GameEntity> cylinder3 = std::make_shared<GameEntity>(cylinder, matRockEnvMap);
+	//std::shared_ptr<GameEntity> cylinder3 = std::make_shared<GameEntity>(cylinder, matRockEnvMap);
 	//std::shared_ptr<GameEntity> helix1 = std::make_shared<GameEntity>(helix, matNormals);
 	//std::shared_ptr<GameEntity> helix2 = std::make_shared<GameEntity>(helix, matUV);
-	std::shared_ptr<GameEntity> helix3 = std::make_shared<GameEntity>(helix, matCobblestoneEnvMap);
+	//std::shared_ptr<GameEntity> helix3 = std::make_shared<GameEntity>(helix, matCobblestoneEnvMap);
 	//std::shared_ptr<GameEntity> sphere1 = std::make_shared<GameEntity>(sphere, matNormals);
 	//std::shared_ptr<GameEntity> sphere2 = std::make_shared<GameEntity>(sphere, matUV);
-	std::shared_ptr<GameEntity> sphere3 = std::make_shared<GameEntity>(sphere, matCushionEnvMap);
+	//std::shared_ptr<GameEntity> sphere3 = std::make_shared<GameEntity>(sphere, matCushionEnvMap);
 	//std::shared_ptr<GameEntity> torus1 = std::make_shared<GameEntity>(torus, matNormals);
 	//std::shared_ptr<GameEntity> torus2 = std::make_shared<GameEntity>(torus, matUV);
-	std::shared_ptr<GameEntity> torus3 = std::make_shared<GameEntity>(torus, matRockEnvMap);
+	//std::shared_ptr<GameEntity> torus3 = std::make_shared<GameEntity>(torus, matRockEnvMap);
 	//std::shared_ptr<GameEntity> quad1 = std::make_shared<GameEntity>(quad, matNormals);
 	//std::shared_ptr<GameEntity> quad2 = std::make_shared<GameEntity>(quad, matUV);
-	std::shared_ptr<GameEntity> quad3 = std::make_shared<GameEntity>(quad, matCobblestoneEnvMap);
+	//std::shared_ptr<GameEntity> quad3 = std::make_shared<GameEntity>(quad, matCobblestoneEnvMap);
 	//std::shared_ptr<GameEntity> quad_double_sided1 = std::make_shared<GameEntity>(quad_double_sided, matNormals);
 	//std::shared_ptr<GameEntity> quad_double_sided2 = std::make_shared<GameEntity>(quad_double_sided, matUV);
-	std::shared_ptr<GameEntity> quad_double_sided3 = std::make_shared<GameEntity>(quad_double_sided, matCushionEnvMap);
+	//std::shared_ptr<GameEntity> quad_double_sided3 = std::make_shared<GameEntity>(quad_double_sided, matCushionEnvMap);
+
+	std::shared_ptr<GameEntity> bronzeSphere = std::make_shared<GameEntity>(sphere, matBronzeEnvMap);
+	std::shared_ptr<GameEntity> cobblestoneSphere = std::make_shared<GameEntity>(sphere, matCobblestoneEnvMap);
+	std::shared_ptr<GameEntity> floorSphere = std::make_shared<GameEntity>(sphere, matFloorEnvMap);
+	std::shared_ptr<GameEntity> paintSphere = std::make_shared<GameEntity>(sphere, matPaintEnvMap);
+	std::shared_ptr<GameEntity> roughSphere = std::make_shared<GameEntity>(sphere, matRoughEnvMap);
+	std::shared_ptr<GameEntity> scratchedSphere = std::make_shared<GameEntity>(sphere, matScratchedEnvMap);
+	std::shared_ptr<GameEntity> woodSphere = std::make_shared<GameEntity>(sphere, matWoodEnvMap);
 
 	//cube1->GetTransform().MoveAbsolute(15.0f, 5.0f, -10.0f);
 	//cube2->GetTransform().MoveAbsolute(15.0f, 0.0f, -10.0f);
-	cube3->GetTransform().MoveAbsolute(-15.0f, -5.0f, 10.0f);
+	//cube3->GetTransform().MoveAbsolute(-15.0f, -5.0f, 10.0f);
+	bronzeSphere->GetTransform().MoveAbsolute(-15.0f, -5.0f, 10.0f);
 	//cylinder1->GetTransform().MoveAbsolute(10.0f, 5.0f, -10.0f);
 	//cylinder2->GetTransform().MoveAbsolute(10.0f, 0.0f, -10.0f);
-	cylinder3->GetTransform().MoveAbsolute(-10.0f, -5.0f, 10.0f);
+	//cylinder3->GetTransform().MoveAbsolute(-10.0f, -5.0f, 10.0f);
+	cobblestoneSphere->GetTransform().MoveAbsolute(-10.0f, -5.0f, 10.0f);
 	//helix1->GetTransform().MoveAbsolute(5.0f, 5.0f, -10.0f);
 	//helix2->GetTransform().MoveAbsolute(5.0f, 0.0f, -10.0f);
-	helix3->GetTransform().MoveAbsolute(-5.0f, -5.0f, 10.0f);
+	//helix3->GetTransform().MoveAbsolute(-5.0f, -5.0f, 10.0f);
+	floorSphere->GetTransform().MoveAbsolute(-5.0f, -5.0f, 10.0f);
 	//sphere1->GetTransform().MoveAbsolute(0.0f, 5.0f, -10.0f);
 	//sphere2->GetTransform().MoveAbsolute(0.0f, 0.0f, -10.0f);
-	sphere3->GetTransform().MoveAbsolute(0.0f, -5.0f, 10.0f);
+	//sphere3->GetTransform().MoveAbsolute(0.0f, -5.0f, 10.0f);
+	paintSphere->GetTransform().MoveAbsolute(0.0f, -5.0f, 10.0f);
 	//torus1->GetTransform().MoveAbsolute(-5.0f, 5.0f, -10.0f);
 	//torus2->GetTransform().MoveAbsolute(-5.0f, 0.0f, -10.0f);
-	torus3->GetTransform().MoveAbsolute(5.0f, -5.0f, 10.0f);
+	//torus3->GetTransform().MoveAbsolute(5.0f, -5.0f, 10.0f);
+	roughSphere->GetTransform().MoveAbsolute(5.0f, -5.0f, 10.0f);
 	//quad1->GetTransform().MoveAbsolute(-10.0f, 5.0f, -10.0f);
 	//quad2->GetTransform().MoveAbsolute(-10.0f, 0.0f, -10.0f);
-	quad3->GetTransform().MoveAbsolute(10.0f, -5.0f, 10.0f);
+	//quad3->GetTransform().MoveAbsolute(10.0f, -5.0f, 10.0f);
+	scratchedSphere->GetTransform().MoveAbsolute(10.0f, -5.0f, 10.0f);
 	//quad_double_sided1->GetTransform().MoveAbsolute(-15.0f, 5.0f, -10.0f);
 	//quad_double_sided2->GetTransform().MoveAbsolute(-15.0f, 0.0f, -10.0f);
-	quad_double_sided3->GetTransform().MoveAbsolute(15.0f, -5.0f, 10.0f);
+	//quad_double_sided3->GetTransform().MoveAbsolute(15.0f, -5.0f, 10.0f);
+	woodSphere->GetTransform().MoveAbsolute(15.0f, -5.0f, 10.0f);
 
 	//entities.push_back(cube1);
 	//entities.push_back(cube2);
-	entities.push_back(cube3);
+	entities.push_back(bronzeSphere);
 	//entities.push_back(cylinder1);
 	//entities.push_back(cylinder2);
-	entities.push_back(cylinder3);
+	entities.push_back(cobblestoneSphere);
 	//entities.push_back(helix1);
 	//entities.push_back(helix2);
-	entities.push_back(helix3);
+	entities.push_back(floorSphere);
 	//entities.push_back(quad1);
 	//entities.push_back(quad2);
-	entities.push_back(quad3);
+	entities.push_back(paintSphere);
 	//entities.push_back(quad_double_sided1);
 	//entities.push_back(quad_double_sided2);
-	entities.push_back(quad_double_sided3);
+	entities.push_back(roughSphere);
 	//entities.push_back(sphere1);
 	//entities.push_back(sphere2);
-	entities.push_back(sphere3);
+	entities.push_back(scratchedSphere);
 	//entities.push_back(torus1);
 	//entities.push_back(torus2);
-	entities.push_back(torus3);
+	//entities.push_back(sphere3);
+	entities.push_back(woodSphere);
 }
 
 // --------------------------------------------------------

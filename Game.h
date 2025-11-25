@@ -37,7 +37,7 @@ private:
 	int radioIndex = 0;
 
 	// ambient lighting
-	XMFLOAT3 ambientLight = XMFLOAT3(0.1f, 0.15f, 0.25f);
+	XMFLOAT3 ambientLight = XMFLOAT3(0, 0, 0);
 
 	// directional lighting
 	std::vector<Light> lights;
