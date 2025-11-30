@@ -401,6 +401,7 @@ void Game::CreateGeometry()
 	std::shared_ptr<GameEntity> roughSphere = std::make_shared<GameEntity>(sphere, matRoughEnvMap);
 	std::shared_ptr<GameEntity> scratchedSphere = std::make_shared<GameEntity>(sphere, matScratchedEnvMap);
 	std::shared_ptr<GameEntity> woodSphere = std::make_shared<GameEntity>(sphere, matWoodEnvMap);
+	std::shared_ptr<GameEntity> woodFloor = std::make_shared<GameEntity>(quad_double_sided, matWoodEnvMap);
 
 	//cube1->GetTransform().MoveAbsolute(15.0f, 5.0f, -10.0f);
 	//cube2->GetTransform().MoveAbsolute(15.0f, 0.0f, -10.0f);
@@ -430,6 +431,8 @@ void Game::CreateGeometry()
 	//quad_double_sided2->GetTransform().MoveAbsolute(-15.0f, 0.0f, -10.0f);
 	//quad_double_sided3->GetTransform().MoveAbsolute(15.0f, -5.0f, 10.0f);
 	woodSphere->GetTransform().MoveAbsolute(15.0f, -5.0f, 10.0f);
+	woodFloor->GetTransform().MoveAbsolute(0.0f, -8.0f, 10.0f);
+	woodFloor->GetTransform().SetScale(20.0f, 20.0f, 20.0f);
 
 	//entities.push_back(cube1);
 	//entities.push_back(cube2);
@@ -453,6 +456,7 @@ void Game::CreateGeometry()
 	//entities.push_back(torus2);
 	//entities.push_back(sphere3);
 	entities.push_back(woodSphere);
+	entities.push_back(woodFloor);
 }
 
 // --------------------------------------------------------
@@ -487,11 +491,11 @@ void Game::Update(float deltaTime, float totalTime)
 	//entities[0]->GetTransform().SetPosition(-0.2f, (float)sin(totalTime)*0.5f-0.5f, 0);
 	//entities[2]->GetTransform().Rotate(0, deltaTime * 1.0f, 0);
 	//entities[3]->GetTransform().SetScale((float)sin(totalTime)*0.5f+1.0f, (float)sin(totalTime)*0.5f+1.0f, 0.0f);
-	for (std::shared_ptr<GameEntity> entity : entities) {
-		Transform transform = entity->GetTransform();
-		XMFLOAT3 currentPYR = transform.GetPitchYawRoll();
-		entity->GetTransform().Rotate(currentPYR.x, deltaTime * 1.0f, currentPYR.z);
-	}
+	//for (std::shared_ptr<GameEntity> entity : entities) {
+	//	Transform transform = entity->GetTransform();
+	//	XMFLOAT3 currentPYR = transform.GetPitchYawRoll();
+	//	entity->GetTransform().Rotate(currentPYR.x, deltaTime * 1.0f, currentPYR.z);
+	//}
 }
 
 
