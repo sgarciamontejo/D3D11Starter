@@ -55,6 +55,14 @@ private:
 	std::vector<std::shared_ptr<Camera>> cameras;
 	std::shared_ptr<Camera> activeCamera;
 
+	// Shadows
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadowDSV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadowSRV;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> shadowRasterizer;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> shadowSampler;
+	XMFLOAT4X4 lightViewMatrix;
+	XMFLOAT4X4 lightProjectionMatrix;
+
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	//void LoadShaders();
 	void CreateGeometry();
