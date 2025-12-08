@@ -24,8 +24,10 @@ Texture2D RoughnessMap : register(t2); // Roughness texture slot 2
 Texture2D MetalnessMap : register(t3); // Metallness texture slot 3
 
 TextureCube EnvironmentMap : register(t4);
+Texture2D ShadowMap : register(t5);
 
 SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 0
+SamplerComparisonState ShadowSampler : register(s1); // shadow sampler slot 1
 
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
@@ -38,6 +40,24 @@ SamplerState BasicSampler : register(s0); // A sampler assigned to sampler slot 
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
+    // perspective divide
+    //input.shadowMapPos /= input.shadowMapPos.w;
+    
+    // convert normalized device coordinates to UVs for sampling
+    float2 shadowUV = input.shadowMapPos.xy * 0.5f + 0.5f;
+    shadowUV.y = 1 - shadowUV.y; // flip y
+    
+    //grab distances needed: light to pixel and closest surface
+    float distToLight = input.shadowMapPos.z;
+    float distShadowMap = ShadowMap.Sample(BasicSampler, shadowUV).r;
+    
+    // ratio of comparison results using SampleCmpLevelZero()
+    float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, distToLight).r;
+    
+    // for testing, return black
+//    if (distShadowMap < distToLight)
+//        return float4(0, 0, 0, 1);
+    
     input.normal = normalize(input.normal);
     input.tangent = normalize(input.tangent);
     input.uv = input.uv * uvScale + uvOffset;
@@ -75,7 +95,14 @@ float4 main(VertexToPixel input) : SV_TARGET
         // directional light
         if (light.Type == 0)
         {
-            totalLight += DirectionalLight(light, input.normal, input.worldPos, cameraPos, roughness, metalness, surfaceColor, specColor);
+            float3 lightResult = DirectionalLight(light, input.normal, input.worldPos, cameraPos, roughness, metalness, surfaceColor, specColor);
+            
+            if (i == 0)
+            {
+                lightResult *= shadowAmount;
+            }
+            
+            totalLight += lightResult;
         }
         // point light
         else if (light.Type == 1)

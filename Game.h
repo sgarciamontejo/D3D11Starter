@@ -60,6 +60,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadowSRV;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> shadowRasterizer;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> shadowSampler;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> shadowVS;
 	XMFLOAT4X4 lightViewMatrix;
 	XMFLOAT4X4 lightProjectionMatrix;
 
@@ -76,6 +77,8 @@ private:
 	std::vector<std::shared_ptr<Material>> materials;
 
 	// Helpers
+	void CreateShadowMapResources();
+	void RenderShadowMap();
 	void UpdateImGui(float deltaTime);
 	void BuildUI();
 };
