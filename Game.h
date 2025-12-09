@@ -64,6 +64,17 @@ private:
 	XMFLOAT4X4 lightViewMatrix;
 	XMFLOAT4X4 lightProjectionMatrix;
 
+	// Post Process Resources
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> ppSampler;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> ppVS;
+
+	// Resources that are tied to a particular post process
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> ppPS;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> ppRTV; // Rendering
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ppSRV; // Sampling
+
+
+
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	//void LoadShaders();
 	void CreateGeometry();
@@ -79,6 +90,8 @@ private:
 	// Helpers
 	void CreateShadowMapResources();
 	void RenderShadowMap();
+	void CreatePostProcessResource();
+	void CreatePostProcessViews();
 	void UpdateImGui(float deltaTime);
 	void BuildUI();
 };
