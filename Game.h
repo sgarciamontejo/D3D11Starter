@@ -35,7 +35,7 @@ private:
 	float shaderOffset[3];
 	float shaderTint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	int radioIndex = 0;
-	int blurDistance;
+	int blurDistance = 5;
 
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -68,12 +68,11 @@ private:
 	XMFLOAT4X4 lightProjectionMatrix;
 
 	// Post Process Resources
-	Microsoft::WRL::ComPtr<ID3D11SamplerState> ppSampler;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> ppVS;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> ppPS;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> fullscreenVS;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> ppSampler;
 
 	// Resources that are tied to a particular post process
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> ppPS;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> ppRTV; // Rendering
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ppSRV; // Sampling
 

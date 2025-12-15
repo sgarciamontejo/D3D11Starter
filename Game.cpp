@@ -531,8 +531,9 @@ void Game::CreateShadowMapResources() {
 void Game::CreatePostProcessResource()
 {
 	// Load shader
-	fullscreenVS = Graphics::LoadVertexShader(FixPath(L"FullscreenVS.cso").c_str());
 	ppPS = Graphics::LoadPixelShader(FixPath(L"BlurPS.cso").c_str());
+	fullscreenVS = Graphics::LoadVertexShader(FixPath(L"FullscreenVS.cso").c_str());
+
 
 	ResizedPostProcessResources();
 
@@ -642,6 +643,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	Graphics::Context->PSSetShaderResources(5, 1, shadowSRV.GetAddressOf());
 	Graphics::Context->PSSetSamplers(1, 1, shadowSampler.GetAddressOf());
 
+
 	// Post - process Pre Draw
 	Graphics::Context->ClearRenderTargetView(ppRTV.Get(), clearColor);
 	Graphics::Context->OMSetRenderTargets(1, ppRTV.GetAddressOf(), Graphics::DepthBufferDSV.Get());
@@ -684,6 +686,9 @@ void Game::Draw(float deltaTime, float totalTime)
 			entity->Draw();
 		}
 
+		// draw sky after normal entities
+		sky->Draw(activeCamera);
+
 		// Post-processing - Post Draw
 		{
 			Graphics::Context->OMSetRenderTargets(1, Graphics::BackBufferRTV.GetAddressOf(), 0);
@@ -709,13 +714,9 @@ void Game::Draw(float deltaTime, float totalTime)
 
 			Graphics::Context->Draw(3, 0);
 
-			ID3D11ShaderResourceView* nullSRVs[16] = {};
-			Graphics::Context->PSSetShaderResources(0, 16, nullSRVs);
+			//ID3D11ShaderResourceView* nullSRVs[16] = {};
+			//Graphics::Context->PSSetShaderResources(0, 16, nullSRVs);
 		}
-
-
-		// draw sky after normal entities
-		sky->Draw(activeCamera);
 
 		ImGui::Render(); // Turns this frame’s UI into renderable triangles
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData()); // Draws it to the screen
@@ -945,7 +946,7 @@ void Game::BuildUI() {
 	}
 
 	if (ImGui::TreeNode("Post Processing")) {
-		if (ImGui::DragInt("\tBlur Distance", &blurDistance, 1));
+		if (ImGui::DragInt("\tBlur Distance", &blurDistance, 1, 0, 50)) {}
 
 		ImGui::TreePop();
 	}
