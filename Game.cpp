@@ -691,6 +691,7 @@ void Game::Draw(float deltaTime, float totalTime)
 			// Activate shaders and bind resources
 			Graphics::Context->VSSetShader(fullscreenVS.Get(), 0, 0);
 			Graphics::Context->PSSetShader(ppPS.Get(), 0, 0);
+
 			Graphics::Context->PSSetShaderResources(0, 1, ppSRV.GetAddressOf());
 			Graphics::Context->PSSetSamplers(0, 1, ppSampler.GetAddressOf());
 

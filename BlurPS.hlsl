@@ -1,4 +1,4 @@
-cbuffer externalData : register(b0)
+cbuffer ExternalData : register(b0)
 {
     int blurRadius;
     float pixelWidth;
