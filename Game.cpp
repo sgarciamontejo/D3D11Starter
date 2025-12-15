@@ -463,6 +463,8 @@ void Game::CreateGeometry()
 	//entities.push_back(sphere3);
 	entities.push_back(woodSphere);
 	entities.push_back(woodFloor);
+
+	CreatePostProcessResource();
 }
 
 void Game::CreateShadowMapResources() {
@@ -528,9 +530,11 @@ void Game::CreateShadowMapResources() {
 
 void Game::CreatePostProcessResource()
 {
-	// Reset existing SRV and RTV ComPtrs
-	ppSRV.Reset();
-	ppRTV.Reset();
+	// Load shader
+	fullscreenVS = Graphics::LoadVertexShader(FixPath(L"FullscreenVS.cso").c_str());
+	ppPS = Graphics::LoadPixelShader(FixPath(L"BlurPS.cso").c_str());
+
+	ResizedPostProcessResources();
 
 	// Declare sampler
 	D3D11_SAMPLER_DESC ppSampDesc = {};
@@ -540,6 +544,12 @@ void Game::CreatePostProcessResource()
 	ppSampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	ppSampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	Graphics::Device->CreateSamplerState(&ppSampDesc, ppSampler.GetAddressOf());
+}
+
+void Game::ResizedPostProcessResources() {
+	// Reset existing SRV and RTV ComPtrs
+	ppSRV.Reset();
+	ppRTV.Reset();
 
 	// Describe texture
 	D3D11_TEXTURE2D_DESC textureDesc = {};
@@ -582,6 +592,8 @@ void Game::OnResize()
 			cameras[i]->GetProjectionMatrix();
 		}
 	}
+
+	if (Graphics::Device) ResizedPostProcessResources();
 }
 
 
@@ -630,6 +642,10 @@ void Game::Draw(float deltaTime, float totalTime)
 	Graphics::Context->PSSetShaderResources(5, 1, shadowSRV.GetAddressOf());
 	Graphics::Context->PSSetSamplers(1, 1, shadowSampler.GetAddressOf());
 
+	// Post - process Pre Draw
+	Graphics::Context->ClearRenderTargetView(ppRTV.Get(), clearColor);
+	Graphics::Context->OMSetRenderTargets(1, ppRTV.GetAddressOf(), Graphics::DepthBufferDSV.Get());
+
 	{
 
 		// loop through entities and draw them
@@ -667,6 +683,35 @@ void Game::Draw(float deltaTime, float totalTime)
 
 			entity->Draw();
 		}
+
+		// Post-processing - Post Draw
+		{
+			Graphics::Context->OMSetRenderTargets(1, Graphics::BackBufferRTV.GetAddressOf(), 0);
+
+			// Activate shaders and bind resources
+			Graphics::Context->VSSetShader(fullscreenVS.Get(), 0, 0);
+			Graphics::Context->PSSetShader(ppPS.Get(), 0, 0);
+			Graphics::Context->PSSetShaderResources(0, 1, ppSRV.GetAddressOf());
+			Graphics::Context->PSSetSamplers(0, 1, ppSampler.GetAddressOf());
+
+			// set required cbuffer data here
+			struct BlurData {
+				int blurDistance;
+				float pixelWidth;
+				float pixelHeight;
+			};
+			BlurData blurData = {};
+			blurData.pixelWidth = 1.0f / Window::Width();
+			blurData.pixelHeight = 1.0f / Window::Height();
+			blurData.blurDistance = blurDistance;
+			Graphics::FillAndBindNextConstantBuffer(&blurData, sizeof(BlurData), D3D11_PIXEL_SHADER, 0);
+
+			Graphics::Context->Draw(3, 0);
+
+			ID3D11ShaderResourceView* nullSRVs[16] = {};
+			Graphics::Context->PSSetShaderResources(0, 16, nullSRVs);
+		}
+
 
 		// draw sky after normal entities
 		sky->Draw(activeCamera);
@@ -894,6 +939,12 @@ void Game::BuildUI() {
 
 	if (ImGui::TreeNode("Shadow Info")) {
 		ImGui::Image(shadowSRV.Get(), ImVec2(512, 512));
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Post Processing")) {
+		if (ImGui::DragInt("\tBlur Distance", &blurDistance, 1));
 
 		ImGui::TreePop();
 	}
