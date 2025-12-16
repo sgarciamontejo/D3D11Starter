@@ -26,5 +26,15 @@ struct PixelShaderData
 	DirectX::XMFLOAT2 uvScale;
 	DirectX::XMFLOAT2 uvOffset;
 
+	int fogType;
+	DirectX::XMFLOAT3 fogColor;
+	float fogStartDist;
+	float fogEndDist;
+	float fogDensity;
+	int heightBasedFog;
+	float fogVerticalDensity;
+	float fogHeight;
+
+	float farClipDistance;
 };
 

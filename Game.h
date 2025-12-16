@@ -35,7 +35,7 @@ private:
 	float shaderOffset[3];
 	float shaderTint[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	int radioIndex = 0;
-	int blurDistance = 5;
+	int blurDistance = 0;
 
 	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -76,7 +76,20 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> ppRTV; // Rendering
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ppSRV; // Sampling
 
+	struct FogOptions
+	{
+		int FogType;
+		DirectX::XMFLOAT3 FogColor;
+		float FogStartDistance;
+		float FogEndDistance;
+		float FogDensity;
+		bool HeightBasedFog;
+		float FogHeight;
+		float FogVerticalDensity;
+		bool MatchBackgroundToFog;
+	};
 
+	FogOptions fogOptions;
 
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.

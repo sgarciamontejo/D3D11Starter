@@ -108,6 +108,18 @@ Game::Game()
 
 		// Shadow map
 		CreateShadowMapResources();
+
+		fogOptions = {
+			.FogType = 1,
+			.FogColor = XMFLOAT3(0.5f, 0.5f, 0.5f),
+			.FogStartDistance = 20.0f,
+			.FogEndDistance = 60.0f,
+			.FogDensity = 0.02f,
+			.HeightBasedFog = false,
+			.FogHeight = 10.0f,
+			.FogVerticalDensity = 0.5f,
+			.MatchBackgroundToFog = false
+		};
 	}
 }
 
@@ -633,6 +645,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - These things should happen ONCE PER FRAME
 	// - At the beginning of Game::Draw() before drawing *anything*
 	{
+
 		// Clear the back buffer (erase what's on screen) and depth buffer
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	demoColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -680,6 +693,15 @@ void Game::Draw(float deltaTime, float totalTime)
 			psData.cameraPos = activeCamera->transform.GetPosition();
 			psData.uvScale = entity->GetMaterial()->GetUVScale();
 			psData.uvOffset = entity->GetMaterial()->GetUVOffset();
+			psData.fogType = fogOptions.FogType;
+			psData.fogColor = fogOptions.FogColor;
+			psData.fogStartDist = fogOptions.FogStartDistance;
+			psData.fogEndDist = fogOptions.FogEndDistance;
+			psData.fogDensity = fogOptions.FogDensity;
+			psData.heightBasedFog = fogOptions.HeightBasedFog;
+			psData.fogVerticalDensity = fogOptions.FogVerticalDensity;
+			psData.fogHeight = fogOptions.FogHeight;
+			psData.farClipDistance = activeCamera->farClip;
 			
 			Graphics::FillAndBindNextConstantBuffer(&psData, sizeof(PixelShaderData), D3D11_PIXEL_SHADER, 0);
 
@@ -947,6 +969,28 @@ void Game::BuildUI() {
 
 	if (ImGui::TreeNode("Post Processing")) {
 		if (ImGui::DragInt("\tBlur Distance", &blurDistance, 1, 0, 50)) {}
+
+		// Fog
+		if (ImGui::TreeNode("Fog")) {
+			ImGui::Combo("Fog Type", &fogOptions.FogType, "Linear to Far Plane\0Specific Distances\0Exponential");
+			ImGui::ColorEdit3("Fog Color", &fogOptions.FogColor.x);
+
+			if (fogOptions.FogType == 1) {
+				ImGui::SliderFloat("Fog Start Dist", &fogOptions.FogStartDistance, 0.0f, 300.0f);
+				ImGui::SliderFloat("Fog End Dist", &fogOptions.FogEndDistance, 0.0f, 300.0f);
+			}
+			else if (fogOptions.FogType == 2) {
+				ImGui::SliderFloat("Fog Density", &fogOptions.FogDensity, 0.0f, 0.1f);
+			}
+
+			ImGui::Checkbox("Height Based Fog", &fogOptions.HeightBasedFog);
+			if (fogOptions.HeightBasedFog) {
+				ImGui::SliderFloat("Vertical Density", &fogOptions.FogVerticalDensity, 0.0f, 1.0f);
+				ImGui::SliderFloat("Fog Height", &fogOptions.FogHeight, 0.0f, 50.0f);
+			}
+
+			ImGui::TreePop();
+		}
 
 		ImGui::TreePop();
 	}

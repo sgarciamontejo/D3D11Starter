@@ -15,6 +15,18 @@ cbuffer ExternalData : register(b0)
     
     float2 uvScale;
     float2 uvOffset;
+    
+    // Fog
+    int fogType;
+    float3 fogColor;
+    float fogStartDist;
+    float fogEndDist;
+    float fogDensity;
+    int heightBasedFog;
+    float fogVerticalDensity;
+    float fogHeight;
+    
+    float farClipDistance;
 }
 
 // Example Texture2D and SamplerState definitions in an HLSL pixel shader
@@ -120,6 +132,36 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 viewVector = normalize(cameraPos - input.worldPos);
     float3 reflectionVector = reflect(-viewVector, input.normal); // Cam to pixel vector (negate)
     float3 reflectionColor = EnvironmentMap.Sample(BasicSampler, reflectionVector).rgb;
+    
+    // Fog type
+    float fog = 0.0f;
+    float surfaceDistance = distance(cameraPos, input.worldPos);
+    
+    switch (fogType)
+    {
+        // Linear to far clip plane
+        case 0:
+            fog = surfaceDistance / farClipDistance; 
+            break;
+        // smooth between start/end distances
+        case 1: 
+            fog = smoothstep(fogStartDist, fogEndDist, surfaceDistance);
+            break;
+        // exponential to far clip
+        case 2:
+            fog = 1.0f - exp(-surfaceDistance * fogDensity);
+            break;
+    }
+    
+    // Exponential vertical fog
+    if (heightBasedFog)
+    {
+        float fogV = 1.0f - exp(-(fogHeight - input.worldPos.y) * fogVerticalDensity);
+        fog = max(fog, fogV);
+    }
+    
+    // Apply fog as a lerp between final color and a fog color
+    totalLight = lerp(totalLight, fogColor, saturate(fog));
     
     float3 finalColor = lerp(totalLight, reflectionColor, F_Schlick(input.normal, viewVector, F0_NON_METAL));
     
